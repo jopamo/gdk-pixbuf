@@ -348,7 +348,10 @@ static void free_pixels(GdkPixbuf* pixbuf) {
 static void free_bytes(GdkPixbuf* pixbuf) {
     g_assert(pixbuf->storage == STORAGE_BYTES);
 
-    g_clear_pointer(&pixbuf->s.bytes.bytes, g_bytes_unref);
+    if (pixbuf->s.bytes.bytes != NULL) {
+        g_bytes_unref(pixbuf->s.bytes.bytes);
+        pixbuf->s.bytes.bytes = NULL;
+    }
 }
 
 static void gdk_pixbuf_finalize(GObject* object) {
@@ -511,7 +514,7 @@ gint gdk_pixbuf_calculate_rowstride(GdkColorspace colorspace,
                                     int bits_per_sample,
                                     int width,
                                     int height) {
-    unsigned int channels;
+    gint channels;
 
     g_return_val_if_fail(colorspace == GDK_COLORSPACE_RGB, -1);
     g_return_val_if_fail(bits_per_sample == 8, -1);
@@ -1169,6 +1172,12 @@ gboolean gdk_pixbuf_set_option(GdkPixbuf* pixbuf, const gchar* key, const gchar*
  *
  * Since: 2.36
  **/
+static gpointer gdk_pixbuf_strdupv_dup(gpointer data, gpointer user_data) {
+    (void)user_data;
+
+    return g_strdupv((gchar**)data);
+}
+
 gboolean gdk_pixbuf_copy_options(GdkPixbuf* src_pixbuf, GdkPixbuf* dest_pixbuf) {
     GQuark quark;
     gchar** options;
@@ -1178,7 +1187,7 @@ gboolean gdk_pixbuf_copy_options(GdkPixbuf* src_pixbuf, GdkPixbuf* dest_pixbuf) 
 
     quark = g_quark_from_static_string("gdk_pixbuf_options");
 
-    options = g_object_dup_qdata(G_OBJECT(src_pixbuf), quark, (GDuplicateFunc)g_strdupv, NULL);
+    options = g_object_dup_qdata(G_OBJECT(src_pixbuf), quark, gdk_pixbuf_strdupv_dup, NULL);
 
     if (options == NULL)
         return TRUE;
@@ -1194,8 +1203,8 @@ static void gdk_pixbuf_set_property(GObject* object, guint prop_id, const GValue
 
     switch (prop_id) {
         case PROP_COLORSPACE:
-            notify = pixbuf->colorspace != g_value_get_enum(value);
-            pixbuf->colorspace = g_value_get_enum(value);
+            notify = pixbuf->colorspace != (GdkColorspace)g_value_get_enum(value);
+            pixbuf->colorspace = (GdkColorspace)g_value_get_enum(value);
             break;
         case PROP_N_CHANNELS:
             notify = pixbuf->n_channels != g_value_get_int(value);
@@ -1366,8 +1375,12 @@ static void gdk_pixbuf_constructed(GObject* object) {
             has_alpha = pixbuf->has_alpha;
 
             /* This is the same check as in gdk_pixbuf_new_from_bytes() */
-            if (!(bytes_size >= width * height * (has_alpha ? 4 : 3))) {
-                g_error("GBytes is too small to fit the pixbuf's declared width and height");
+            {
+                gsize min_size = (gsize)width * (gsize)height * (has_alpha ? 4u : 3u);
+
+                if (bytes_size < min_size) {
+                    g_error("GBytes is too small to fit the pixbuf's declared width and height");
+                }
             }
             break;
         }

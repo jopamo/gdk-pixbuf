@@ -74,7 +74,7 @@ static int loader_sanity_check(const char* path, GdkPixbufFormat* info, GdkPixbu
 
                 goto error;
             }
-            if (strspn(pattern->mask, " !xzn*") < mask_len) {
+            if (strspn(pattern->mask, " !xzn*") < (size_t)mask_len) {
                 error = "bad char in mask";
 
                 goto error;
@@ -411,7 +411,7 @@ int main(int argc, char** argv) {
             const char* dent;
 
             while ((dent = g_dir_read_name(dir))) {
-                gint len = strlen(dent);
+                gsize len = strlen(dent);
                 if (len > SOEXT_LEN && strcmp(dent + len - SOEXT_LEN, SOEXT) == 0) {
                     modules = g_list_prepend(modules, g_strdup(dent));
                 }

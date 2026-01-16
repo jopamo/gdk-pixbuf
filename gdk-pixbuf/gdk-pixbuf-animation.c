@@ -106,6 +106,8 @@ static GType gdk_pixbuf_non_anim_iter_get_type(void) G_GNUC_CONST;
 
 G_DEFINE_TYPE(GdkPixbufAnimation, gdk_pixbuf_animation, G_TYPE_OBJECT)
 
+static const guint8 gdk_pixbuf_animation_new_from_stream_async_tag = 0;
+
 static void gdk_pixbuf_animation_class_init(GdkPixbufAnimationClass* klass) {}
 
 static void gdk_pixbuf_animation_init(GdkPixbufAnimation* animation) {}
@@ -429,7 +431,7 @@ void gdk_pixbuf_animation_new_from_stream_async(GInputStream* stream,
     g_return_if_fail(!cancellable || G_IS_CANCELLABLE(cancellable));
 
     task = g_task_new(G_OBJECT(stream), cancellable, callback, user_data);
-    g_task_set_source_tag(task, gdk_pixbuf_animation_new_from_stream_async);
+    g_task_set_source_tag(task, (gpointer)&gdk_pixbuf_animation_new_from_stream_async_tag);
     g_task_run_in_thread(task, animation_new_from_stream_thread);
     g_object_unref(task);
 }

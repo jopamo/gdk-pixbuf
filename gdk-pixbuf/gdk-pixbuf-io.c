@@ -47,6 +47,11 @@
 #include <mach-o/dyld.h>
 #endif
 
+static const guint8 gdk_pixbuf_new_from_stream_at_scale_async_tag = 0;
+static const guint8 gdk_pixbuf_new_from_stream_async_tag = 0;
+static const guint8 gdk_pixbuf_get_file_info_async_tag = 0;
+static const guint8 gdk_pixbuf_save_to_streamv_async_tag = 0;
+
 /**
  * GdkPixbufModule:
  * @module_name: the name of the module, usually the same as the
@@ -264,7 +269,7 @@ static gboolean scan_string(const char** pos, GString* out) {
 }
 
 static gboolean scan_int(const char** pos, int* out) {
-    int i = 0;
+    size_t i = 0;
     char buf[32];
     const char* p = *pos;
 
@@ -1518,7 +1523,7 @@ void gdk_pixbuf_new_from_stream_at_scale_async(GInputStream* stream,
                            (GDestroyNotify)at_scale_data_async_data_free);
 
     task = g_task_new(stream, cancellable, callback, user_data);
-    g_task_set_source_tag(task, gdk_pixbuf_new_from_stream_at_scale_async);
+    g_task_set_source_tag(task, (gpointer)&gdk_pixbuf_new_from_stream_at_scale_async_tag);
     g_task_set_task_data(task, loader, g_object_unref);
 
     g_input_stream_read_bytes_async(stream, LOAD_BUFFER_SIZE, G_PRIORITY_DEFAULT, cancellable,
@@ -1698,7 +1703,7 @@ void gdk_pixbuf_new_from_stream_async(GInputStream* stream,
     g_return_if_fail(!cancellable || G_IS_CANCELLABLE(cancellable));
 
     task = g_task_new(stream, cancellable, callback, user_data);
-    g_task_set_source_tag(task, gdk_pixbuf_new_from_stream_async);
+    g_task_set_source_tag(task, (gpointer)&gdk_pixbuf_new_from_stream_async_tag);
     g_task_set_task_data(task, gdk_pixbuf_loader_new(), g_object_unref);
 
     g_input_stream_read_bytes_async(stream, LOAD_BUFFER_SIZE, G_PRIORITY_DEFAULT, cancellable,
@@ -1869,7 +1874,7 @@ void gdk_pixbuf_get_file_info_async(const gchar* filename,
 
     task = g_task_new(NULL, cancellable, callback, user_data);
     g_task_set_return_on_cancel(task, TRUE);
-    g_task_set_source_tag(task, gdk_pixbuf_get_file_info_async);
+    g_task_set_source_tag(task, (gpointer)&gdk_pixbuf_get_file_info_async_tag);
     g_task_set_task_data(task, data, (GDestroyNotify)get_file_info_async_data_free);
     g_task_run_in_thread(task, (GTaskThreadFunc)get_file_info_thread);
     g_object_unref(task);
@@ -2791,7 +2796,7 @@ void gdk_pixbuf_save_to_streamv_async(GdkPixbuf* pixbuf,
     data->values = g_strdupv(option_values);
 
     task = g_task_new(pixbuf, cancellable, callback, user_data);
-    g_task_set_source_tag(task, gdk_pixbuf_save_to_streamv_async);
+    g_task_set_source_tag(task, (gpointer)&gdk_pixbuf_save_to_streamv_async_tag);
     g_task_set_task_data(task, data, (GDestroyNotify)save_to_stream_async_data_free);
     g_task_run_in_thread(task, (GTaskThreadFunc)save_to_stream_thread);
     g_object_unref(task);

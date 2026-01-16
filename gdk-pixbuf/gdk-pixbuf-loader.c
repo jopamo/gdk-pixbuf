@@ -391,10 +391,10 @@ static gint gdk_pixbuf_loader_load_module(GdkPixbufLoader* loader, const char* i
 }
 
 static int gdk_pixbuf_loader_eat_header_write(GdkPixbufLoader* loader, const guchar* buf, gsize count, GError** error) {
-    gint n_bytes;
+    gsize n_bytes;
     GdkPixbufLoaderPrivate* priv = loader->priv;
 
-    n_bytes = MIN(SNIFF_BUFFER_SIZE - priv->header_buf_offset, count);
+    n_bytes = MIN((gsize)(SNIFF_BUFFER_SIZE - priv->header_buf_offset), count);
     memcpy(priv->header_buf + priv->header_buf_offset, buf, n_bytes);
 
     priv->header_buf_offset += n_bytes;
@@ -404,7 +404,7 @@ static int gdk_pixbuf_loader_eat_header_write(GdkPixbufLoader* loader, const guc
             return 0;
     }
 
-    return n_bytes;
+    return (int)n_bytes;
 }
 
 /**
