@@ -1283,9 +1283,11 @@ static void gdk_pixbuf_get_property(GObject* object, guint prop_id, GValue* valu
         case PROP_PIXELS:
             g_value_set_pointer(value, gdk_pixbuf_get_pixels(pixbuf));
             break;
-        case PROP_PIXEL_BYTES:
-            g_value_set_boxed(value, gdk_pixbuf_read_pixel_bytes(pixbuf));
+        case PROP_PIXEL_BYTES: {
+            GBytes* bytes = gdk_pixbuf_read_pixel_bytes(pixbuf);
+            g_value_take_boxed(value, bytes);
             break;
+        }
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
             break;
@@ -1293,13 +1295,15 @@ static void gdk_pixbuf_get_property(GObject* object, guint prop_id, GValue* valu
 }
 
 static void make_storage_invalid(GdkPixbuf* pixbuf) {
-    char* buf;
+    guchar* buf;
     gsize bufsize = 3;
 
-    buf = g_new0(char, bufsize);
+    buf = g_new0(guchar, bufsize);
 
-    pixbuf->storage = STORAGE_BYTES;
-    pixbuf->s.bytes.bytes = g_bytes_new_with_free_func(buf, bufsize, g_free, NULL);
+    pixbuf->storage = STORAGE_PIXELS;
+    pixbuf->s.pixels.pixels = buf;
+    pixbuf->s.pixels.destroy_fn = free_buffer;
+    pixbuf->s.pixels.destroy_fn_data = NULL;
 
     pixbuf->colorspace = GDK_COLORSPACE_RGB;
     pixbuf->n_channels = 3;

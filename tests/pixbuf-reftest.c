@@ -28,7 +28,8 @@
 /* As defined in gdk-pixbuf-private.h */
 #define DEFAULT_FILL_COLOR 0x979899ff
 
-static void loader_size_prepared(gpointer loader, int w, int h, GdkPixbuf** pixbuf) {
+static void loader_size_prepared(gpointer loader, int w, int h, gpointer user_data) {
+    GdkPixbuf** pixbuf = user_data;
     (void)loader;
     g_assert(*pixbuf == NULL);
 
@@ -38,10 +39,12 @@ static void loader_size_prepared(gpointer loader, int w, int h, GdkPixbuf** pixb
     gdk_pixbuf_fill(*pixbuf, DEFAULT_FILL_COLOR);
 }
 
-static void loader_area_prepared(GdkPixbufLoader* loader, GdkPixbuf** pixbuf) {
+static void loader_area_prepared(gpointer loader, gpointer user_data) {
+    GdkPixbuf** pixbuf = user_data;
+    GdkPixbufLoader* pixbuf_loader = GDK_PIXBUF_LOADER(loader);
     g_assert(*pixbuf != NULL);
 
-    if (gdk_pixbuf_get_has_alpha(gdk_pixbuf_loader_get_pixbuf(loader))) {
+    if (gdk_pixbuf_get_has_alpha(gdk_pixbuf_loader_get_pixbuf(pixbuf_loader))) {
         GdkPixbuf* alpha = gdk_pixbuf_add_alpha(*pixbuf, FALSE, 0, 0, 0);
 
         g_object_unref(*pixbuf);
@@ -51,8 +54,10 @@ static void loader_area_prepared(GdkPixbufLoader* loader, GdkPixbuf** pixbuf) {
     g_assert(*pixbuf != NULL);
 }
 
-static void loader_area_updated(GdkPixbufLoader* loader, int x, int y, int w, int h, GdkPixbuf** pixbuf) {
-    gdk_pixbuf_copy_area(gdk_pixbuf_loader_get_pixbuf(loader), x, y, w, h, *pixbuf, x, y);
+static void loader_area_updated(gpointer loader, int x, int y, int w, int h, gpointer user_data) {
+    GdkPixbuf** pixbuf = user_data;
+    GdkPixbufLoader* pixbuf_loader = GDK_PIXBUF_LOADER(loader);
+    gdk_pixbuf_copy_area(gdk_pixbuf_loader_get_pixbuf(pixbuf_loader), x, y, w, h, *pixbuf, x, y);
 }
 
 static GFile* make_ref_file(GFile* file) {

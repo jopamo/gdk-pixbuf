@@ -38,6 +38,9 @@
 static void randomly_modify(const gchar* image, guint size) {
     int i, n;
 
+    if (image == NULL || size == 0)
+        return;
+
     guchar* img_copy = g_malloc(size);
     memmove(img_copy, image, size);
 
@@ -73,7 +76,11 @@ static void test_randomly_modified(gconstpointer data) {
     gint i;
     GError* error = NULL;
 
-    g_file_load_contents(file, NULL, &buffer, &size, NULL, &error);
+    if (!g_file_load_contents(file, NULL, &buffer, &size, NULL, &error)) {
+        g_test_message("Failed to load file: %s", error ? error->message : "unknown error");
+        g_clear_error(&error);
+        return;
+    }
     g_assert_no_error(error);
 
     if (g_test_thorough())
@@ -91,9 +98,15 @@ int main(int argc, char** argv) {
     gchar* base_dir;
     GFile *base, *test_images;
 #ifdef HAVE_SETRLIMIT
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer) || __has_feature(memory_sanitizer) || __has_feature(thread_sanitizer)
+#define GDK_PIXBUF_HAS_SANITIZER 1
+#endif
+#endif
 #if defined(__SANITIZE_ADDRESS__) || defined(__SANITIZE_MEMORY__) || defined(__SANITIZE_THREAD__)
-    /* Avoid limiting memory when running with sanitizers. */
-#else
+#define GDK_PIXBUF_HAS_SANITIZER 1
+#endif
+#ifndef GDK_PIXBUF_HAS_SANITIZER
     struct rlimit max_mem_size;
 
     max_mem_size.rlim_cur = 100 * 1024 * 1024; /* 100M */

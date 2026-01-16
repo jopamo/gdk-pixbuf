@@ -70,6 +70,8 @@ static void test_type9_rotation_exif_tag(void) {
 
     g_assert_cmpstr(gdk_pixbuf_get_option(ref, "orientation"), ==, "6");
 
+    g_object_unref(ref1);
+    g_object_unref(ref2);
     g_object_unref(ref);
 }
 
@@ -84,6 +86,7 @@ static void test_bug_775218(void) {
 
     ref = gdk_pixbuf_new_from_file(g_test_get_filename(G_TEST_DIST, "bug775218.jpg", NULL), &error);
     g_assert_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE);
+    g_clear_error(&error);
     g_clear_object(&ref);
 }
 
@@ -176,6 +179,7 @@ static void test_jpeg_fbfbfbfb(void) {
 
     gdk_pixbuf_loader_close(loader, &error);
     g_assert_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE);
+    g_clear_error(&error);
 
     pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
     g_assert_nonnull(pixbuf);
