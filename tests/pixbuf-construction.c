@@ -77,12 +77,29 @@ static void test_bytes(void) {
     g_bytes_unref(bytes);
 }
 
+static gint overflow_width_for_channels(guint channels) {
+    return (G_MAXINT - 3) / (gint)channels + 1;
+}
+
+static void test_rowstride_overflow(void) {
+    gint width = overflow_width_for_channels(4);
+    gint rowstride;
+    GdkPixbuf* pixbuf;
+
+    rowstride = gdk_pixbuf_calculate_rowstride(GDK_COLORSPACE_RGB, TRUE, 8, width, 1);
+    g_assert_cmpint(rowstride, ==, -1);
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, width, 1);
+    g_assert_null(pixbuf);
+}
+
 int main(int argc, char** argv) {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/pixbuf/construction/no_construct_properties", test_no_construct_properties);
     g_test_add_func("/pixbuf/construction/pixels", test_pixels);
     g_test_add_func("/pixbuf/construction/bytes", test_bytes);
+    g_test_add_func("/pixbuf/construction/rowstride-overflow", test_rowstride_overflow);
 
     return g_test_run();
 }

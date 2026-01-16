@@ -23,6 +23,10 @@
 #include "gdk-pixbuf/gdk-pixbuf.h"
 #include "test-common.h"
 
+static gint overflow_width_for_channels(guint channels) {
+    return (G_MAXINT - 3) / (gint)channels + 1;
+}
+
 static void test_scale(gconstpointer data) {
     const gchar* filename = data;
     const gchar* path;
@@ -335,6 +339,21 @@ static void test_dest(gconstpointer data) {
     g_object_unref(G_OBJECT(copy));
 }
 
+static void test_scale_simple_overflow(void) {
+    GdkPixbuf* src;
+    GdkPixbuf* scaled;
+    gint width;
+
+    src = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
+    g_assert_nonnull(src);
+
+    width = overflow_width_for_channels(4);
+    scaled = gdk_pixbuf_scale_simple(src, width, 1, GDK_INTERP_NEAREST);
+    g_assert_null(scaled);
+
+    g_object_unref(src);
+}
+
 int main(int argc, char** argv) {
     GdkInterpType nearest = GDK_INTERP_NEAREST;
     GdkInterpType tiles = GDK_INTERP_TILES;
@@ -371,6 +390,8 @@ int main(int argc, char** argv) {
     g_test_add_data_func("/pixbuf/scale/dest/tiles", &tiles, test_dest);
     g_test_add_data_func("/pixbuf/scale/dest/bilinear", &bilinear, test_dest);
     /* Don't bother with hyper as it changes the edge pixels */
+
+    g_test_add_func("/pixbuf/scale/overflow/simple", test_scale_simple_overflow);
 
     return g_test_run();
 }

@@ -21,6 +21,10 @@
 #include <gdk-pixbuf.h>
 #include "test-common.h"
 
+static gint overflow_width_for_channels(guint channels) {
+    return (G_MAXINT - 3) / (gint)channels + 1;
+}
+
 static void test_composite1(void) {
     GdkPixbuf *red, *green, *out, *ref, *sub;
 
@@ -56,7 +60,7 @@ static void test_composite2(void) {
     GdkPixbuf *src, *dest;
     guchar *pixels, *p;
 
-    char* filename = g_test_get_filename(G_TEST_DIST, "test-image.png", NULL);
+    const char* filename = g_test_get_filename(G_TEST_DIST, "test-image.png", NULL);
     if (!format_supported(filename)) {
         g_test_skip("PNG format not supported");
         return;
@@ -128,11 +132,27 @@ static void test_composite2(void) {
     g_object_unref(src);
 }
 
+static void test_composite_color_simple_overflow(void) {
+    GdkPixbuf* src;
+    GdkPixbuf* dest;
+    gint width;
+
+    src = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
+    g_assert_nonnull(src);
+
+    width = overflow_width_for_channels(4);
+    dest = gdk_pixbuf_composite_color_simple(src, width, 1, GDK_INTERP_NEAREST, 255, 1, 0x00000000, 0xffffffff);
+    g_assert_null(dest);
+
+    g_object_unref(src);
+}
+
 int main(int argc, char* argv[]) {
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/pixbuf/composite1", test_composite1);
     g_test_add_func("/pixbuf/composite2", test_composite2);
+    g_test_add_func("/pixbuf/composite/overflow/color-simple", test_composite_color_simple_overflow);
 
     return g_test_run();
 }
