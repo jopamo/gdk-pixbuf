@@ -113,7 +113,11 @@ GdkPixbuf* gdk_pixbuf_new_from_bytes(GBytes* data,
     g_return_val_if_fail(bits_per_sample == 8, NULL);
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
-    g_return_val_if_fail(g_bytes_get_size(data) >= width * height * (has_alpha ? 4 : 3), NULL);
+    {
+        gsize min_size = (gsize)width * (gsize)height * (has_alpha ? 4u : 3u);
+
+        g_return_val_if_fail(g_bytes_get_size(data) >= min_size, NULL);
+    }
 
     return g_object_new(GDK_TYPE_PIXBUF, "pixel-bytes", data, "colorspace", colorspace, "n-channels", has_alpha ? 4 : 3,
                         "bits-per-sample", bits_per_sample, "has-alpha", has_alpha ? TRUE : FALSE, "width", width,

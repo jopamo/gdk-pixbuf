@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset: 2; -*- */
 /* GdkPixbuf library - test loaders
  *
- * Copyright (C) 2001 Søren Sandmann (sandmann@daimi.au.dk)
+ * Copyright (C) 2001 Soren Sandmann (sandmann@daimi.au.dk)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,10 +38,12 @@
 static void randomly_modify(const gchar* image, guint size) {
     int i, n;
 
+    guchar* img_copy;
+
     if (image == NULL || size == 0)
         return;
 
-    guchar* img_copy = g_malloc(size);
+    img_copy = g_malloc(size);
     memmove(img_copy, image, size);
 
     n = MIN(100, size / 4);

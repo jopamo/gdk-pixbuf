@@ -104,7 +104,7 @@ struct _GdkPixbufNonAnimIterClass {
 
 static GType gdk_pixbuf_non_anim_iter_get_type(void) G_GNUC_CONST;
 
-G_DEFINE_TYPE(GdkPixbufAnimation, gdk_pixbuf_animation, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GdkPixbufAnimation, gdk_pixbuf_animation, G_TYPE_OBJECT)
 
 static void gdk_pixbuf_animation_class_init(GdkPixbufAnimationClass* klass) {}
 
@@ -653,7 +653,7 @@ GdkPixbufAnimationIter* gdk_pixbuf_animation_get_iter(GdkPixbufAnimation* animat
     return GDK_PIXBUF_ANIMATION_GET_CLASS(animation)->get_iter(animation, &val);
 }
 
-G_DEFINE_TYPE(GdkPixbufAnimationIter, gdk_pixbuf_animation_iter, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GdkPixbufAnimationIter, gdk_pixbuf_animation_iter, G_TYPE_OBJECT)
 
 static void gdk_pixbuf_animation_iter_class_init(GdkPixbufAnimationIterClass* klass) {}
 
@@ -780,7 +780,7 @@ static GdkPixbuf* gdk_pixbuf_non_anim_get_static_image(GdkPixbufAnimation* anima
 static void gdk_pixbuf_non_anim_get_size(GdkPixbufAnimation* anim, gint* width, gint* height);
 static GdkPixbufAnimationIter* gdk_pixbuf_non_anim_get_iter(GdkPixbufAnimation* anim, const GTimeVal* start_time);
 
-G_DEFINE_TYPE(GdkPixbufNonAnim, gdk_pixbuf_non_anim, GDK_TYPE_PIXBUF_ANIMATION);
+G_DEFINE_TYPE(GdkPixbufNonAnim, gdk_pixbuf_non_anim, GDK_TYPE_PIXBUF_ANIMATION)
 
 static void gdk_pixbuf_non_anim_class_init(GdkPixbufNonAnimClass* klass) {
     GObjectClass* object_class = G_OBJECT_CLASS(klass);

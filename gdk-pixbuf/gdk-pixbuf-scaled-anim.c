@@ -71,7 +71,7 @@ GdkPixbufScaledAnim* _gdk_pixbuf_scaled_anim_new(GdkPixbufAnimation* anim,
     return scaled;
 }
 
-G_DEFINE_TYPE(GdkPixbufScaledAnim, gdk_pixbuf_scaled_anim, GDK_TYPE_PIXBUF_ANIMATION);
+G_DEFINE_TYPE(GdkPixbufScaledAnim, gdk_pixbuf_scaled_anim, GDK_TYPE_PIXBUF_ANIMATION)
 
 static void gdk_pixbuf_scaled_anim_init(GdkPixbufScaledAnim* scaled) {
     scaled->xscale = 1.0;
@@ -177,7 +177,7 @@ static void gdk_pixbuf_scaled_anim_class_init(GdkPixbufScaledAnimClass* klass) {
     anim_class->get_iter = get_iter;
 }
 
-G_DEFINE_TYPE(GdkPixbufScaledAnimIter, gdk_pixbuf_scaled_anim_iter, GDK_TYPE_PIXBUF_ANIMATION_ITER);
+G_DEFINE_TYPE(GdkPixbufScaledAnimIter, gdk_pixbuf_scaled_anim_iter, GDK_TYPE_PIXBUF_ANIMATION_ITER)
 
 static void gdk_pixbuf_scaled_anim_iter_init(GdkPixbufScaledAnimIter* iter) {}
 
