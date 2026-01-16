@@ -90,7 +90,7 @@ static gboolean gdk_pixbuf__qtif_image_load_increment(gpointer context, const gu
 static gboolean gdk_pixbuf__qtif_image_create_loader(QTIFContext* context, GError** error);
 static gboolean gdk_pixbuf__qtif_image_free_loader(QTIFContext* context, GError** error);
 
-static void gdk_pixbuf__qtif_cb_size_prepared(GdkPixbufLoader* loader, gint width, gint height, gpointer user_data);
+static void gdk_pixbuf__qtif_cb_size_prepared(gpointer loader, gint width, gint height, gpointer user_data);
 static void gdk_pixbuf__qtif_cb_area_prepared(GdkPixbufLoader* loader, gpointer user_data);
 static void gdk_pixbuf__qtif_cb_area_updated(GdkPixbufLoader* loader,
                                              gint x,
@@ -443,8 +443,9 @@ static gboolean gdk_pixbuf__qtif_image_load_increment(gpointer data, const gucha
 }
 
 /* Event handlers */
-static void gdk_pixbuf__qtif_cb_size_prepared(GdkPixbufLoader* loader, gint width, gint height, gpointer user_data) {
+static void gdk_pixbuf__qtif_cb_size_prepared(gpointer loader, gint width, gint height, gpointer user_data) {
     QTIFContext* context = (QTIFContext*)user_data;
+    (void)loader;
     (context->size_func)(&width, &height, context->user_data);
     context->cb_prepare_count++;
 }
