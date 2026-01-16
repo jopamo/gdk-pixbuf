@@ -28,7 +28,8 @@
 /* As defined in gdk-pixbuf-private.h */
 #define DEFAULT_FILL_COLOR 0x979899ff
 
-static void loader_size_prepared(GdkPixbufLoader* loader, int w, int h, GdkPixbuf** pixbuf) {
+static void loader_size_prepared(gpointer loader, int w, int h, GdkPixbuf** pixbuf) {
+    (void)loader;
     g_assert(*pixbuf == NULL);
 
     *pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
