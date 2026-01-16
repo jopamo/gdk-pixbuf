@@ -87,7 +87,9 @@ static void test_bug_775218(void) {
     ref = gdk_pixbuf_new_from_file(g_test_get_filename(G_TEST_DIST, "bug775218.jpg", NULL), &error);
     g_assert_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE);
     g_clear_error(&error);
-    g_clear_object(&ref);
+    if (ref != NULL)
+        g_object_unref(ref);
+    ref = NULL;
 }
 
 static void test_comment(void) {

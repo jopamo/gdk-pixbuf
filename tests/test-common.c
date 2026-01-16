@@ -30,7 +30,7 @@
  * so they average to (128,128,128)) */
 GdkPixbuf* make_checkerboard(int width, int height) {
     GdkPixbuf* checkerboard;
-    guint x, y;
+    gint x, y;
     guchar* row;   /* Pointer to start of row of pixels within the image */
     guchar* pixel; /* Pointer to current pixel data in row */
 
@@ -50,7 +50,7 @@ GdkPixbuf* make_checkerboard(int width, int height) {
 /* Image where all the pixels have different colours */
 GdkPixbuf* make_rg(int width, int height) {
     GdkPixbuf* pixbuf;
-    guint x, y;
+    gint x, y;
     guchar* row;   /* Pointer to start of row of pixels within the image */
     guchar* pixel; /* Pointer to current pixel data in row */
 

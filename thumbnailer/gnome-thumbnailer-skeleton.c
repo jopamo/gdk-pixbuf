@@ -213,7 +213,7 @@ static const GOptionEntry entries[] = {
     {"size", 's', 0, G_OPTION_ARG_INT, &output_size, "Size of the thumbnail in pixels", NULL},
     {"g-fatal-warnings", 0, 0, G_OPTION_ARG_NONE, &g_fatal_warnings, "Make all warnings fatal", NULL},
     {G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL, "[INPUT FILE] [OUTPUT FILE]"},
-    {NULL}};
+    {NULL, 0, 0, 0, NULL, NULL, NULL}};
 
 int main(int argc, char** argv) {
     char* input_filename;

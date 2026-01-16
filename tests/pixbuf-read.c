@@ -1,7 +1,7 @@
 /* -*- Mode: C; c-basic-offset: 2; -*- */
 /* GdkPixbuf library - test loaders
  *
- * Copyright (C) 2001 Søren Sandmann (sandmann@daimi.au.dk)
+ * Copyright (C) 2001 Soren Sandmann (sandmann@daimi.au.dk)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,8 @@ static gboolean test_loader(const guchar* bytes, gsize len, GError** err) {
 
     return TRUE;
 }
+
+static void usage(void) G_GNUC_NORETURN;
 
 static void usage(void) {
     g_print("usage: pixbuf-read <files>\n");
