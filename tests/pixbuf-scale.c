@@ -172,7 +172,7 @@ static void test_halve_checkerboard(gconstpointer data) {
     GdkPixbuf* scaled;                /* Scaled version */
     guchar* row;                      /* Pointer to start of row of pixels within the image */
     guchar* pixel;                    /* Pointer to current pixel data in row */
-    guint x, y;
+    gint x, y;
     guchar expected; /* Expected color of all pixels */
 
     expected = (interp_type == GDK_INTERP_NEAREST) ? 255 : 128;
@@ -186,9 +186,8 @@ static void test_halve_checkerboard(gconstpointer data) {
     g_assert_cmpint(scaled_height, >, 0);
 
     /* Check that the result is all gray (or all white in the case of NEAREST) */
-    for (y = 0, row = gdk_pixbuf_get_pixels(scaled); y < (guint)scaled_height;
-         y++, row += gdk_pixbuf_get_rowstride(scaled)) {
-        for (x = 0, pixel = row; x < (guint)scaled_width; x++, pixel += gdk_pixbuf_get_n_channels(scaled)) {
+    for (y = 0, row = gdk_pixbuf_get_pixels(scaled); y < scaled_height; y++, row += gdk_pixbuf_get_rowstride(scaled)) {
+        for (x = 0, pixel = row; x < scaled_width; x++, pixel += gdk_pixbuf_get_n_channels(scaled)) {
             if (!(pixel[0] == expected && pixel[1] == expected && pixel[2] == expected)) {
                 /* Expected failure: HYPER has a different opinion about the color
                  * of the corner pixels: (126,126,126) and (130,130,130) */
@@ -210,13 +209,13 @@ static void test_halve_checkerboard(gconstpointer data) {
 static void crop_n_compare(const GdkPixbuf* source,
                            gint offset_x,
                            gint offset_y,
-                           guint width,
-                           guint height,
+                           gint width,
+                           gint height,
                            GdkInterpType interp_type) {
     GdkPixbuf *cropped, *scaled;
     guchar *crow, *srow;     /* Pointer to current row in image data */
     guchar *cpixel, *spixel; /* Pointer to current pixel in row */
-    guint x, y;
+    gint x, y;
     gint scaled_width, scaled_height; /* Size of scaled image */
 
     cropped = gdk_pixbuf_new_subpixbuf((GdkPixbuf*)source, offset_x, offset_y, width, height);

@@ -28,7 +28,7 @@ const gchar* get_test_path(const gchar* filename) {
 
 static gboolean pixels_match(GBytes* pixels0, GBytes* pixels1) {
     gsize size0, size1, i;
-    guint8 *data0, *data1;
+    const guint8 *data0, *data1;
 
     data0 = g_bytes_get_data(pixels0, &size0);
     data1 = g_bytes_get_data(pixels1, &size1);
@@ -89,7 +89,9 @@ static void run_gif_test(gconstpointer data) {
     input_file = g_file_new_for_path(get_test_path(input_filename));
     g_free(input_filename);
     input_bytes = g_file_load_bytes(input_file, NULL, NULL, &error);
-    g_clear_object(&input_file);
+    if (input_file != NULL)
+        g_object_unref(input_file);
+    input_file = NULL;
     g_assert_no_error(error);
 
     width = g_key_file_get_integer(config_file, "config", "width", &error);
@@ -99,7 +101,9 @@ static void run_gif_test(gconstpointer data) {
 
     loader = gdk_pixbuf_loader_new();
     gdk_pixbuf_loader_write_bytes(loader, input_bytes, &error);
-    g_clear_pointer(&input_bytes, g_bytes_unref);
+    if (input_bytes != NULL)
+        g_bytes_unref(input_bytes);
+    input_bytes = NULL;
     g_assert_no_error(error);
 
     gdk_pixbuf_loader_close(loader, &error);
@@ -150,7 +154,9 @@ static void run_gif_test(gconstpointer data) {
         pixels_file = g_file_new_for_path(get_test_path(pixels_filename));
         g_free(pixels_filename);
         expected_pixels = g_file_load_bytes(pixels_file, NULL, NULL, &error);
-        g_clear_object(&pixels_file);
+        if (pixels_file != NULL)
+            g_object_unref(pixels_file);
+        pixels_file = NULL;
         g_assert_no_error(error);
 
         g_assert_cmpint(gdk_pixbuf_get_colorspace(pixbuf), ==, GDK_COLORSPACE_RGB);
@@ -159,17 +165,27 @@ static void run_gif_test(gconstpointer data) {
         g_assert_cmpint(gdk_pixbuf_get_rowstride(pixbuf), ==, width * 4);
         pixels = g_bytes_new_static(gdk_pixbuf_read_pixels(pixbuf), gdk_pixbuf_get_byte_length(pixbuf));
         g_assert_true(pixels_match(pixels, expected_pixels));
-        g_clear_pointer(&pixels, g_bytes_unref);
-        g_clear_pointer(&expected_pixels, g_bytes_unref);
+        if (pixels != NULL)
+            g_bytes_unref(pixels);
+        pixels = NULL;
+        if (expected_pixels != NULL)
+            g_bytes_unref(expected_pixels);
+        expected_pixels = NULL;
     }
     g_strfreev(frames);
-    g_clear_object(&iter);
+    if (iter != NULL)
+        g_object_unref(iter);
+    iter = NULL;
 
     /* FIXME: We should check here if there's more frames than we were expecting, but gdk-pixbuf doesn't return this
      * information */
 
-    g_clear_object(&loader);
-    g_clear_pointer(&config_file, g_key_file_unref);
+    if (loader != NULL)
+        g_object_unref(loader);
+    loader = NULL;
+    if (config_file != NULL)
+        g_key_file_unref(config_file);
+    config_file = NULL;
 }
 
 int main(int argc, char** argv) {
