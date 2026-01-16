@@ -209,6 +209,7 @@ static void png_free_callback(png_structp o, png_voidp x) {
 static GdkPixbuf* gdk_pixbuf__png_image_load(FILE* f, GError** error) {
     GdkPixbuf* volatile pixbuf = NULL;
     gint rowstride;
+    guint64 len;
     png_structp png_ptr;
     png_infop info_ptr;
     png_textp text_ptr;
@@ -264,7 +265,22 @@ static GdkPixbuf* gdk_pixbuf__png_image_load(FILE* f, GError** error) {
         return NULL;
     }
 
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, ctype & PNG_COLOR_MASK_ALPHA, 8, w, h);
+    if (w > G_MAXINT || h > G_MAXINT) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                            _("Insufficient memory to load PNG file"));
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        return NULL;
+    }
+
+    rowstride = gdk_pixbuf_calculate_rowstride(GDK_COLORSPACE_RGB, ctype & PNG_COLOR_MASK_ALPHA, 8, (gint)w, (gint)h);
+    if (rowstride <= 0 || !g_uint64_checked_mul(&len, rowstride, h) || len >= G_MAXINT) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                            _("Insufficient memory to load PNG file"));
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+        return NULL;
+    }
+
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, ctype & PNG_COLOR_MASK_ALPHA, 8, (gint)w, (gint)h);
 
     if (!pixbuf) {
         g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
@@ -557,6 +573,8 @@ static void png_info_callback(png_structp png_read_ptr, png_infop png_info_ptr) 
     png_textp png_text_ptr;
     int i, num_texts;
     int color_type;
+    gint rowstride;
+    guint64 len;
     gboolean have_alpha = FALSE;
     gchar* icc_profile_base64;
     const gchar* icc_profile_title;
@@ -596,7 +614,26 @@ static void png_info_callback(png_structp png_read_ptr, png_infop png_info_ptr) 
         }
     }
 
-    lc->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, have_alpha, 8, width, height);
+    if (width > G_MAXINT || height > G_MAXINT) {
+        lc->fatal_error_occurred = TRUE;
+        g_set_error(
+            lc->error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+            _("Insufficient memory to store a %lu by %lu image; try exiting some applications to reduce memory usage"),
+            (gulong)width, (gulong)height);
+        return;
+    }
+
+    rowstride = gdk_pixbuf_calculate_rowstride(GDK_COLORSPACE_RGB, have_alpha, 8, (gint)width, (gint)height);
+    if (rowstride <= 0 || !g_uint64_checked_mul(&len, rowstride, height) || len >= G_MAXINT) {
+        lc->fatal_error_occurred = TRUE;
+        g_set_error(
+            lc->error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+            _("Insufficient memory to store a %lu by %lu image; try exiting some applications to reduce memory usage"),
+            (gulong)width, (gulong)height);
+        return;
+    }
+
+    lc->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, have_alpha, 8, (gint)width, (gint)height);
 
     if (lc->pixbuf == NULL) {
         /* Failed to allocate memory */
