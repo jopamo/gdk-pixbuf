@@ -78,6 +78,10 @@ typedef enum { GDK_PIXBUF_ALPHA_BILEVEL, GDK_PIXBUF_ALPHA_FULL } GdkPixbufAlphaM
  */
 typedef enum { GDK_COLORSPACE_RGB } GdkColorspace;
 
+GDK_PIXBUF_AVAILABLE_IN_ALL
+GType gdk_colorspace_get_type(void) G_GNUC_CONST;
+#define GDK_TYPE_COLORSPACE (gdk_colorspace_get_type())
+
 /* All of these are opaque structures */
 
 typedef struct _GdkPixbuf GdkPixbuf;

@@ -198,6 +198,22 @@ enum {
 static void gdk_pixbuf_icon_iface_init(GIconIface* iface);
 static void gdk_pixbuf_loadable_icon_iface_init(GLoadableIconIface* iface);
 
+GType gdk_colorspace_get_type(void) {
+    static gsize g_define_type;
+
+    if (g_once_init_enter(&g_define_type)) {
+        static const GEnumValue values[] = {
+            {GDK_COLORSPACE_RGB, "GDK_COLORSPACE_RGB", "rgb"},
+            {0, NULL, NULL},
+        };
+        GType enum_type = g_enum_register_static(g_intern_static_string("GdkColorspace"), values);
+
+        g_once_init_leave(&g_define_type, enum_type);
+    }
+
+    return g_define_type;
+}
+
 G_DEFINE_TYPE_WITH_CODE(GdkPixbuf,
                         gdk_pixbuf,
                         G_TYPE_OBJECT,
