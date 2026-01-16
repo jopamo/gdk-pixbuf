@@ -48,6 +48,7 @@ static void test_serialize(void) {
 
     g_object_unref(pixbuf2);
     g_object_unref(pixbuf);
+    g_object_unref(icon);
     g_object_unref(stream);
     g_variant_unref(data);
 }

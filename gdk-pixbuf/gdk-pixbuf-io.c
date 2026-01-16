@@ -1157,7 +1157,8 @@ static void at_scale_data_async_data_free(AtScaleData* data) {
     g_slice_free(AtScaleData, data);
 }
 
-static void at_scale_size_prepared_cb(GdkPixbufLoader* loader, int width, int height, gpointer data) {
+static void at_scale_size_prepared_cb(gpointer loader, int width, int height, gpointer data) {
+    GdkPixbufLoader* pixbuf_loader = loader;
     AtScaleData* info = data;
 
     g_return_if_fail(width > 0 && height > 0);
@@ -1190,7 +1191,7 @@ static void at_scale_size_prepared_cb(GdkPixbufLoader* loader, int width, int he
     width = MAX(width, 1);
     height = MAX(height, 1);
 
-    gdk_pixbuf_loader_set_size(loader, width, height);
+    gdk_pixbuf_loader_set_size(pixbuf_loader, width, height);
 }
 
 /**
@@ -1574,7 +1575,8 @@ GdkPixbuf* _gdk_pixbuf_new_from_resource_try_pixdata(const char* resource_path) 
         GdkPixdata pixdata;
         guint32 magic;
 
-        magic = (stream[0] << 24) + (stream[1] << 16) + (stream[2] << 8) + stream[3];
+        magic =
+            ((guint32)stream[0] << 24) | ((guint32)stream[1] << 16) | ((guint32)stream[2] << 8) | (guint32)stream[3];
         if (magic == GDK_PIXBUF_MAGIC_NUMBER && gdk_pixdata_deserialize(&pixdata, data_size, stream, NULL)) {
             pixbuf = gdk_pixbuf_from_pixdata(&pixdata, FALSE, NULL);
         }
@@ -1729,7 +1731,7 @@ GdkPixbuf* gdk_pixbuf_new_from_stream_finish(GAsyncResult* async_result, GError*
     return g_task_propagate_pointer(task, error);
 }
 
-static void info_cb(GdkPixbufLoader* loader, int width, int height, gpointer data) {
+static void info_cb(gpointer loader, int width, int height, gpointer data) {
     struct {
         GdkPixbufFormat* format;
         int width;
@@ -1738,7 +1740,7 @@ static void info_cb(GdkPixbufLoader* loader, int width, int height, gpointer dat
 
     g_return_if_fail(width > 0 && height > 0);
 
-    info->format = gdk_pixbuf_loader_get_format(loader);
+    info->format = gdk_pixbuf_loader_get_format((GdkPixbufLoader*)loader);
     info->width = width;
     info->height = height;
 

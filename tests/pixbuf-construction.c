@@ -34,6 +34,8 @@ static void test_no_construct_properties(void) {
 
     g_object_get(pixbuf, "pixels", &pixels, NULL);
     g_assert(pixels != NULL);
+
+    g_object_unref(pixbuf);
 }
 
 #define WIDTH 10
