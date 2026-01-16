@@ -24,112 +24,95 @@
 #include <time.h>
 #include <string.h>
 
-static void
-assault (const guchar *header, gsize header_size, int n_images)
-{
-  FILE *f;
-  enum { N_CHARACTERS = 10000 };
+static void assault(const guchar* header, gsize header_size, int n_images) {
+    FILE* f;
+    enum { N_CHARACTERS = 10000 };
 
-  int j;
+    int j;
 
-  for (j = 0; j < n_images; ++j)
-    {
-      GError *err = NULL;
-      int i;
-      GdkPixbufLoader *loader;
-      
-      f = fopen ("pixbuf-random-image", "w");
-      if (!f)
-	{
-	  perror ("fopen");
-	  exit (EXIT_FAILURE);
-	}
-  
-      loader = gdk_pixbuf_loader_new ();
-      
-      gdk_pixbuf_loader_write (loader, header, header_size, &err);
-      if (err)
-	{
-	  g_error_free (err);
-	  g_object_unref (loader);
-	  fclose (f);
-	  continue;
-	}
-      
-      for (i = 0; i < N_CHARACTERS; ++i)
-	{
-	  int r = g_random_int ();
+    for (j = 0; j < n_images; ++j) {
+        GError* err = NULL;
+        int i;
+        GdkPixbufLoader* loader;
 
-	  fwrite (&r, 1, sizeof (r), f);
-	  if (ferror (f))
-	    {
-	      perror ("fwrite");
-	      exit (EXIT_FAILURE);
-	    }
-	  
-	  gdk_pixbuf_loader_write (loader, (guchar *)&r, sizeof (r), &err);
-	  if (err)
-	    {
-	      g_error_free (err);
-	      err = NULL;
-	      break;
-	    }
-	}
-      
-      fclose (f);
-      
-      gdk_pixbuf_loader_close (loader, &err);
-      if (err)
-	{
-	  g_error_free (err);
-	  err = NULL;
-	}
-      
-      g_object_unref (loader);
+        f = fopen("pixbuf-random-image", "w");
+        if (!f) {
+            perror("fopen");
+            exit(EXIT_FAILURE);
+        }
+
+        loader = gdk_pixbuf_loader_new();
+
+        gdk_pixbuf_loader_write(loader, header, header_size, &err);
+        if (err) {
+            g_error_free(err);
+            g_object_unref(loader);
+            fclose(f);
+            continue;
+        }
+
+        for (i = 0; i < N_CHARACTERS; ++i) {
+            int r = g_random_int();
+
+            fwrite(&r, 1, sizeof(r), f);
+            if (ferror(f)) {
+                perror("fwrite");
+                exit(EXIT_FAILURE);
+            }
+
+            gdk_pixbuf_loader_write(loader, (guchar*)&r, sizeof(r), &err);
+            if (err) {
+                g_error_free(err);
+                err = NULL;
+                break;
+            }
+        }
+
+        fclose(f);
+
+        gdk_pixbuf_loader_close(loader, &err);
+        if (err) {
+            g_error_free(err);
+            err = NULL;
+        }
+
+        g_object_unref(loader);
     }
 }
 
-static void
-write_seed (int seed)
-{
-  FILE *f;
-  /* write this so you can reproduce failed tests */
-  f = fopen ("pixbuf-random-seed", "w");
-  if (!f)
-    {
-      perror ("fopen");
-      exit (EXIT_FAILURE);
+static void write_seed(int seed) {
+    FILE* f;
+    /* write this so you can reproduce failed tests */
+    f = fopen("pixbuf-random-seed", "w");
+    if (!f) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
     }
-  if (fprintf (f, "%d\n", seed) < 0)
-    {
-      perror ("fprintf");
-      exit (EXIT_FAILURE);
+    if (fprintf(f, "%d\n", seed) < 0) {
+        perror("fprintf");
+        exit(EXIT_FAILURE);
     }
-  if (fclose (f) < 0)
-    {
-      perror ("fclose");
-      exit (EXIT_FAILURE);
+    if (fclose(f) < 0) {
+        perror("fclose");
+        exit(EXIT_FAILURE);
     }
-  g_print ("seed: %d\n", seed);
+    g_print("seed: %d\n", seed);
 }
 
-int
-main (int argc, char **argv)
-{
-  int seed;
+int main(int argc, char** argv) {
+    int seed;
 
-  if (argc > 1)
-    seed = atoi (argv[1]);
-  else
-    {
-      seed = time (NULL);
-      write_seed (seed);
+    if (argc > 1)
+        seed = atoi(argv[1]);
+    else {
+        seed = time(NULL);
+        write_seed(seed);
     }
-  g_print ("the last tested image is saved to the file \"pixbuf-random-image\"\n\n");
+    g_print("the last tested image is saved to the file \"pixbuf-random-image\"\n\n");
 
-  g_log_set_always_fatal (G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
-  
-  g_random_set_seed (seed);
+    g_log_set_always_fatal(G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+
+    g_random_set_seed(seed);
 
 #define GIF_HEADER 'G', 'I', 'F', '8', '9', 'a'
 #define PNG_HEADER 0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a
@@ -137,34 +120,33 @@ main (int argc, char **argv)
 #define TIFF2_HEADER 'I', 'I', 0x2a, 0x00
 #define JPEG_HEADER 0xFF, 0xd8
 #define PNM_HEADER 'P', '6'
-#define XBM_HEADER '#', 'd', 'e', 'f', 'i', 'n', 'e', ' '  
-#define BMP_HEADER 'B', 'M'  
+#define XBM_HEADER '#', 'd', 'e', 'f', 'i', 'n', 'e', ' '
+#define BMP_HEADER 'B', 'M'
 #define XPM_HEADER '/', '*', ' ', 'X', 'P', 'M', ' ', '*', '/'
 #define RAS_HEADER 0x59, 0xA6, 0x6A, 0x95
 
-#define TEST_RANDOM(header, n_img)				\
-do {								\
-	static guchar h[] = { header };				\
-	g_print (#header);					\
-	fflush (stdout);					\
-	assault (h, sizeof (h), n_img);				\
-	g_print ("\t\tpassed\n");				\
-} while (0)
+#define TEST_RANDOM(header, n_img)    \
+    do {                              \
+        static guchar h[] = {header}; \
+        g_print(#header);             \
+        fflush(stdout);               \
+        assault(h, sizeof(h), n_img); \
+        g_print("\t\tpassed\n");      \
+    } while (0)
 
-  for (;;)
-    {
-      TEST_RANDOM (GIF_HEADER,   150);
-      TEST_RANDOM (PNG_HEADER,   110);
-      TEST_RANDOM (JPEG_HEADER,  800);
-      TEST_RANDOM (TIFF1_HEADER, 150);
-      TEST_RANDOM (TIFF2_HEADER, 150);
-      TEST_RANDOM (PNM_HEADER,   150);
-      TEST_RANDOM (XBM_HEADER,   150);
-      TEST_RANDOM (BMP_HEADER,   150);
-      TEST_RANDOM (XPM_HEADER,   150);
-      TEST_RANDOM (RAS_HEADER,   300);
-      g_print ("===========================\n");
+    for (;;) {
+        TEST_RANDOM(GIF_HEADER, 150);
+        TEST_RANDOM(PNG_HEADER, 110);
+        TEST_RANDOM(JPEG_HEADER, 800);
+        TEST_RANDOM(TIFF1_HEADER, 150);
+        TEST_RANDOM(TIFF2_HEADER, 150);
+        TEST_RANDOM(PNM_HEADER, 150);
+        TEST_RANDOM(XBM_HEADER, 150);
+        TEST_RANDOM(BMP_HEADER, 150);
+        TEST_RANDOM(XPM_HEADER, 150);
+        TEST_RANDOM(RAS_HEADER, 300);
+        g_print("===========================\n");
     }
-  
-  return 0;
+
+    return 0;
 }

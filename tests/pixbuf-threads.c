@@ -22,84 +22,75 @@
 #include "gdk-pixbuf/gdk-pixbuf.h"
 #include "test-common.h"
 
-static void
-load_image (gpointer data, 
-	    gpointer user_data)
-{
-  gchar *filename = data;
-  const gchar *path;
-  FILE *file;
-  int nbytes;
-  guchar buffer[1024];
-  GdkPixbufLoader *loader;
-  GError *error = NULL;
+static void load_image(gpointer data, gpointer user_data) {
+    gchar* filename = data;
+    const gchar* path;
+    FILE* file;
+    int nbytes;
+    guchar buffer[1024];
+    GdkPixbufLoader* loader;
+    GError* error = NULL;
 
-  loader = gdk_pixbuf_loader_new ();
-  path = g_test_get_filename (G_TEST_DIST, "test-images/randomly-modified", filename, NULL);
+    loader = gdk_pixbuf_loader_new();
+    path = g_test_get_filename(G_TEST_DIST, "test-images/randomly-modified", filename, NULL);
 
-  g_test_message ("reading %s", path); 
-  file = g_fopen (path, "rb");
-  g_assert (file != NULL);
+    g_test_message("reading %s", path);
+    file = g_fopen(path, "rb");
+    g_assert(file != NULL);
 
-  while (!feof (file)) 
-    {
-      nbytes = fread (buffer, 1, sizeof (buffer), file);
-      gdk_pixbuf_loader_write (loader, buffer, nbytes, &error);
-      g_assert_no_error (error);
-      g_thread_yield ();      
+    while (!feof(file)) {
+        nbytes = fread(buffer, 1, sizeof(buffer), file);
+        gdk_pixbuf_loader_write(loader, buffer, nbytes, &error);
+        g_assert_no_error(error);
+        g_thread_yield();
     }
 
-  fclose (file);
+    fclose(file);
 
-  gdk_pixbuf_loader_close (loader, &error);
-  g_assert_no_error (error);
+    gdk_pixbuf_loader_close(loader, &error);
+    g_assert_no_error(error);
 
-  g_object_unref (loader);
+    g_object_unref(loader);
 }
 
-static void
-test_threads (void)
-{
-  GThreadPool *pool;
-  gint iterations;
-  gint i;
+static void test_threads(void) {
+    GThreadPool* pool;
+    gint iterations;
+    gint i;
 
-  pool = g_thread_pool_new (load_image, NULL, 20, FALSE, NULL);
+    pool = g_thread_pool_new(load_image, NULL, 20, FALSE, NULL);
 
-  if (g_test_thorough ())
-    iterations = 100;
-  else
-    iterations = 1;
+    if (g_test_thorough())
+        iterations = 100;
+    else
+        iterations = 1;
 
-  for (i = 0; i < iterations; i++)
-    {
-      if (format_supported ("jpeg"))
-        g_thread_pool_push (pool, "valid.1.jpeg", NULL);
-      if (format_supported ("png"))
-        g_thread_pool_push (pool, "valid.1.png", NULL);
-      if (format_supported ("gif"))
-        g_thread_pool_push (pool, "valid.1.gif", NULL);
-      if (format_supported ("bmp"))
-        g_thread_pool_push (pool, "valid.1.bmp", NULL);
-      if (format_supported ("jpeg"))
-        g_thread_pool_push (pool, "valid.2.jpeg", NULL);
-      if (format_supported ("xpm"))
-        g_thread_pool_push (pool, "valid.1.xpm", NULL);
-      if (format_supported ("tga"))
-        g_thread_pool_push (pool, "valid.1.tga", NULL);
-      if (format_supported ("tiff"))
-        g_thread_pool_push (pool, "valid.1.tiff", NULL);
+    for (i = 0; i < iterations; i++) {
+        if (format_supported("jpeg"))
+            g_thread_pool_push(pool, "valid.1.jpeg", NULL);
+        if (format_supported("png"))
+            g_thread_pool_push(pool, "valid.1.png", NULL);
+        if (format_supported("gif"))
+            g_thread_pool_push(pool, "valid.1.gif", NULL);
+        if (format_supported("bmp"))
+            g_thread_pool_push(pool, "valid.1.bmp", NULL);
+        if (format_supported("jpeg"))
+            g_thread_pool_push(pool, "valid.2.jpeg", NULL);
+        if (format_supported("xpm"))
+            g_thread_pool_push(pool, "valid.1.xpm", NULL);
+        if (format_supported("tga"))
+            g_thread_pool_push(pool, "valid.1.tga", NULL);
+        if (format_supported("tiff"))
+            g_thread_pool_push(pool, "valid.1.tiff", NULL);
     }
 
-  g_thread_pool_free (pool, FALSE, TRUE);
+    g_thread_pool_free(pool, FALSE, TRUE);
 }
 
-int
-main (int argc, char **argv)
-{
-  g_test_init (&argc, &argv, NULL);
+int main(int argc, char** argv) {
+    g_test_init(&argc, &argv, NULL);
 
-  g_test_add_func ("/pixbuf/threads", test_threads);
+    g_test_add_func("/pixbuf/threads", test_threads);
 
-  return g_test_run ();
+    return g_test_run();
 }

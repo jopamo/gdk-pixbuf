@@ -45,56 +45,55 @@ typedef enum {
     EncoderParameterValueTypePointer = 9
 } EncoderParameterValueType;
 
-#define    PixelFormatIndexed   0x00010000
-#define    PixelFormatGDI       0x00020000
-#define    PixelFormatAlpha     0x00040000
-#define    PixelFormatPAlpha    0x00080000
-#define    PixelFormatExtended  0x00100000
-#define    PixelFormatCanonical 0x00200000
+#define PixelFormatIndexed 0x00010000
+#define PixelFormatGDI 0x00020000
+#define PixelFormatAlpha 0x00040000
+#define PixelFormatPAlpha 0x00080000
+#define PixelFormatExtended 0x00100000
+#define PixelFormatCanonical 0x00200000
 
-#define    PixelFormatUndefined 0
-#define    PixelFormatDontCare  0
+#define PixelFormatUndefined 0
+#define PixelFormatDontCare 0
 
-#define    PixelFormat1bppIndexed       (1 | ( 1 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat4bppIndexed       (2 | ( 4 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat8bppIndexed       (3 | ( 8 << 8) | PixelFormatIndexed | PixelFormatGDI)
-#define    PixelFormat16bppGrayScale    (4 | (16 << 8) | PixelFormatExtended)
-#define    PixelFormat16bppRGB555       (5 | (16 << 8) | PixelFormatGDI)
-#define    PixelFormat16bppRGB565       (6 | (16 << 8) | PixelFormatGDI)
-#define    PixelFormat16bppARGB1555     (7 | (16 << 8) | PixelFormatAlpha | PixelFormatGDI)
-#define    PixelFormat24bppRGB          (8 | (24 << 8) | PixelFormatGDI)
-#define    PixelFormat32bppRGB          (9 | (32 << 8) | PixelFormatGDI)
-#define    PixelFormat32bppARGB         (10 | (32 << 8) | PixelFormatAlpha | PixelFormatGDI | PixelFormatCanonical)
-#define    PixelFormat32bppPARGB        (11 | (32 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatGDI)
-#define    PixelFormat48bppRGB          (12 | (48 << 8) | PixelFormatExtended)
-#define    PixelFormat64bppARGB         (13 | (64 << 8) | PixelFormatAlpha  | PixelFormatCanonical | PixelFormatExtended)
-#define    PixelFormat64bppPARGB        (14 | (64 << 8) | PixelFormatAlpha  | PixelFormatPAlpha | PixelFormatExtended)
-#define    PixelFormatMax               15
+#define PixelFormat1bppIndexed (1 | (1 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat4bppIndexed (2 | (4 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat8bppIndexed (3 | (8 << 8) | PixelFormatIndexed | PixelFormatGDI)
+#define PixelFormat16bppGrayScale (4 | (16 << 8) | PixelFormatExtended)
+#define PixelFormat16bppRGB555 (5 | (16 << 8) | PixelFormatGDI)
+#define PixelFormat16bppRGB565 (6 | (16 << 8) | PixelFormatGDI)
+#define PixelFormat16bppARGB1555 (7 | (16 << 8) | PixelFormatAlpha | PixelFormatGDI)
+#define PixelFormat24bppRGB (8 | (24 << 8) | PixelFormatGDI)
+#define PixelFormat32bppRGB (9 | (32 << 8) | PixelFormatGDI)
+#define PixelFormat32bppARGB (10 | (32 << 8) | PixelFormatAlpha | PixelFormatGDI | PixelFormatCanonical)
+#define PixelFormat32bppPARGB (11 | (32 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatGDI)
+#define PixelFormat48bppRGB (12 | (48 << 8) | PixelFormatExtended)
+#define PixelFormat64bppARGB (13 | (64 << 8) | PixelFormatAlpha | PixelFormatCanonical | PixelFormatExtended)
+#define PixelFormat64bppPARGB (14 | (64 << 8) | PixelFormatAlpha | PixelFormatPAlpha | PixelFormatExtended)
+#define PixelFormatMax 15
 
-enum _Status
-{
-    Ok                          = 0,
-    GenericError                = 1,
-    InvalidParameter            = 2,
-    OutOfMemory                 = 3,
-    ObjectBusy                  = 4,
-    InsufficientBuffer          = 5,
-    NotImplemented              = 6,
-    Win32Error                  = 7,
-    WrongState                  = 8,
-    Aborted                     = 9,
-    FileNotFound                = 10,
-    ValueOverflow               = 11,
-    AccessDenied                = 12,
-    UnknownImageFormat          = 13,
-    FontFamilyNotFound          = 14,
-    FontStyleNotFound           = 15,
-    NotTrueTypeFont             = 16,
-    UnsupportedGdiplusVersion   = 17,
-    GdiplusNotInitialized       = 18,
-    PropertyNotFound            = 19,
-    PropertyNotSupported        = 20,
-    ProfileNotFound             = 21
+enum _Status {
+    Ok = 0,
+    GenericError = 1,
+    InvalidParameter = 2,
+    OutOfMemory = 3,
+    ObjectBusy = 4,
+    InsufficientBuffer = 5,
+    NotImplemented = 6,
+    Win32Error = 7,
+    WrongState = 8,
+    Aborted = 9,
+    FileNotFound = 10,
+    ValueOverflow = 11,
+    AccessDenied = 12,
+    UnknownImageFormat = 13,
+    FontFamilyNotFound = 14,
+    FontStyleNotFound = 15,
+    NotTrueTypeFont = 16,
+    UnsupportedGdiplusVersion = 17,
+    GdiplusNotInitialized = 18,
+    PropertyNotFound = 19,
+    PropertyNotSupported = 20,
+    ProfileNotFound = 21
 };
 typedef enum _Status Status;
 typedef enum _Status GpStatus;
@@ -116,28 +115,17 @@ typedef enum {
     ImageFlagsCaching = 0x00020000
 } ImageFlags;
 
-enum _ImageLockMode
-{
-    ImageLockModeRead           = 1,
-    ImageLockModeWrite          = 2,
-    ImageLockModeUserInputBuf   = 4
-};
+enum _ImageLockMode { ImageLockModeRead = 1, ImageLockModeWrite = 2, ImageLockModeUserInputBuf = 4 };
 typedef enum _ImageLockMode ImageLockMode;
 
-enum _ImageType
-{
-    ImageTypeUnknown,
-    ImageTypeBitmap,
-    ImageTypeMetafile
-};
+enum _ImageType { ImageTypeUnknown, ImageTypeBitmap, ImageTypeMetafile };
 typedef enum _ImageType ImageType;
 
 typedef struct _GpImage GpImage;
 typedef struct _GpBitmap GpBitmap;
 typedef struct _GpGraphics GpGraphics;
 
-struct _GdiplusStartupInput
-{
+struct _GdiplusStartupInput {
     UINT32 GdiplusVersion;
     gpointer DebugEventCallback;
     BOOL SuppressBackgroundThread;
@@ -145,35 +133,31 @@ struct _GdiplusStartupInput
 };
 typedef struct _GdiplusStartupInput GdiplusStartupInput;
 
-struct _PropItem
-{
-  ULONG id;
-  ULONG length;
-  WORD type;
-  VOID *value;
+struct _PropItem {
+    ULONG id;
+    ULONG length;
+    WORD type;
+    VOID* value;
 };
 typedef struct _PropItem PropertyItem;
 
-struct _EncoderParameter
-{
-    GUID    Guid;
-    ULONG   NumberOfValues;
-    ULONG   Type;
-    VOID*   Value;
+struct _EncoderParameter {
+    GUID Guid;
+    ULONG NumberOfValues;
+    ULONG Type;
+    VOID* Value;
 };
 typedef struct _EncoderParameter EncoderParameter;
 
-struct _EncoderParameters
-{
-    UINT Count;                      /* Number of parameters in this structure */
-    EncoderParameter Parameter[1];   /* Parameter values */
+struct _EncoderParameters {
+    UINT Count;                    /* Number of parameters in this structure */
+    EncoderParameter Parameter[1]; /* Parameter values */
 };
 typedef struct _EncoderParameters EncoderParameters;
 
-struct _ImageCodecInfo
-{
+struct _ImageCodecInfo {
     CLSID Clsid;
-    GUID  FormatID;
+    GUID FormatID;
     const WCHAR* CodecName;
     const WCHAR* DllName;
     const WCHAR* FormatDescription;
@@ -188,8 +172,7 @@ struct _ImageCodecInfo
 };
 typedef struct _ImageCodecInfo ImageCodecInfo;
 
-struct _BitmapData
-{
+struct _BitmapData {
     UINT Width;
     UINT Height;
     INT Stride;
@@ -199,8 +182,7 @@ struct _BitmapData
 };
 typedef struct _BitmapData BitmapData;
 
-struct _GpRect
-{
+struct _GpRect {
     INT X;
     INT Y;
     INT Width;
@@ -213,43 +195,46 @@ typedef struct _GpRect GpRect;
 #endif
 
 #ifndef IStream_Seek
-#define IStream_Seek(This,dlibMove,dwOrigin,plibNewPosition) (This)->lpVtbl->Seek(This,dlibMove,dwOrigin,plibNewPosition)
+#define IStream_Seek(This, dlibMove, dwOrigin, plibNewPosition) \
+    (This)->lpVtbl->Seek(This, dlibMove, dwOrigin, plibNewPosition)
 #endif
 
 #ifndef IStream_Read
-#define IStream_Read(This,pv,cb,pcbRead) (This)->lpVtbl->Read(This,pv,cb,pcbRead)
+#define IStream_Read(This, pv, cb, pcbRead) (This)->lpVtbl->Read(This, pv, cb, pcbRead)
 #endif
 
 #ifndef IStream_SetSize
-#define IStream_SetSize(This,size) (This)->lpVtbl->SetSize(This,size)
+#define IStream_SetSize(This, size) (This)->lpVtbl->SetSize(This, size)
 #endif
 
-GpStatus WINGDIPAPI GdiplusStartup (gpointer, const gpointer, gpointer);
-GpStatus WINGDIPAPI GdipCreateBitmapFromStream (gpointer, GpBitmap**);
-GpStatus WINGDIPAPI GdipBitmapGetPixel (GpBitmap*, gint x, gint y, ARGB*);
-GpStatus WINGDIPAPI GdipGetImageWidth (GpImage*, guint*);
-GpStatus WINGDIPAPI GdipGetImageHeight (GpImage*, guint*);
-GpStatus WINGDIPAPI GdipDisposeImage (GpImage*);
-GpStatus WINGDIPAPI GdipGetImageFlags (GpImage *, guint*);
-GpStatus WINGDIPAPI GdipImageGetFrameCount (GpImage *image, const GUID* dimensionID, UINT* count);
-GpStatus WINGDIPAPI GdipImageSelectActiveFrame (GpImage *image, const GUID* dimensionID, UINT frameIndex);
-GpStatus WINGDIPAPI GdipGetPropertyItemSize (GpImage *image, int propId, guint* size);
-GpStatus WINGDIPAPI GdipGetPropertyItem (GpImage *image, int propId, guint propSize, PropertyItem* buffer);
-GpStatus WINGDIPAPI GdipCreateBitmapFromScan0 (INT width, INT height, INT stride, PixelFormat format, BYTE* scan0, 
-                                               GpBitmap** bitmap);
-GpStatus WINGDIPAPI GdipSaveImageToStream (GpImage *image, IStream* stream, const CLSID* clsidEncoder, 
-                                           const EncoderParameters* encoderParams);
-GpStatus WINGDIPAPI GdipGetImageEncoders (UINT numEncoders, UINT size, ImageCodecInfo *encoders);
-GpStatus WINGDIPAPI GdipGetImageEncodersSize (UINT *numEncoders, UINT *size);
-GpStatus WINGDIPAPI GdipBitmapSetPixel (GpBitmap* bitmap, INT x, INT y, ARGB color);
-GpStatus WINGDIPAPI GdipDrawImageI (GpGraphics *graphics, GpImage *image, INT x, INT y);
-GpStatus WINGDIPAPI GdipGetImageGraphicsContext (GpImage *image, GpGraphics **graphics);
-GpStatus WINGDIPAPI GdipFlush (GpGraphics *graphics, INT intention);
-GpStatus WINGDIPAPI GdipGraphicsClear (GpGraphics *graphics, ARGB color);
-GpStatus WINGDIPAPI GdipBitmapSetResolution (GpBitmap* bitmap, float xdpi, float ydpi);
-GpStatus WINGDIPAPI GdipGetImageHorizontalResolution (GpImage *image, float *resolution);
-GpStatus WINGDIPAPI GdipGetImageVerticalResolution (GpImage *image, float *resolution);
-GpStatus WINGDIPAPI GdipLoadImageFromStream (IStream* stream, GpImage **image);
-GpStatus WINGDIPAPI GdipDeleteGraphics (GpGraphics *graphics);
+GpStatus WINGDIPAPI GdiplusStartup(gpointer, const gpointer, gpointer);
+GpStatus WINGDIPAPI GdipCreateBitmapFromStream(gpointer, GpBitmap**);
+GpStatus WINGDIPAPI GdipBitmapGetPixel(GpBitmap*, gint x, gint y, ARGB*);
+GpStatus WINGDIPAPI GdipGetImageWidth(GpImage*, guint*);
+GpStatus WINGDIPAPI GdipGetImageHeight(GpImage*, guint*);
+GpStatus WINGDIPAPI GdipDisposeImage(GpImage*);
+GpStatus WINGDIPAPI GdipGetImageFlags(GpImage*, guint*);
+GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage* image, const GUID* dimensionID, UINT* count);
+GpStatus WINGDIPAPI GdipImageSelectActiveFrame(GpImage* image, const GUID* dimensionID, UINT frameIndex);
+GpStatus WINGDIPAPI GdipGetPropertyItemSize(GpImage* image, int propId, guint* size);
+GpStatus WINGDIPAPI GdipGetPropertyItem(GpImage* image, int propId, guint propSize, PropertyItem* buffer);
+GpStatus WINGDIPAPI
+GdipCreateBitmapFromScan0(INT width, INT height, INT stride, PixelFormat format, BYTE* scan0, GpBitmap** bitmap);
+GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage* image,
+                                          IStream* stream,
+                                          const CLSID* clsidEncoder,
+                                          const EncoderParameters* encoderParams);
+GpStatus WINGDIPAPI GdipGetImageEncoders(UINT numEncoders, UINT size, ImageCodecInfo* encoders);
+GpStatus WINGDIPAPI GdipGetImageEncodersSize(UINT* numEncoders, UINT* size);
+GpStatus WINGDIPAPI GdipBitmapSetPixel(GpBitmap* bitmap, INT x, INT y, ARGB color);
+GpStatus WINGDIPAPI GdipDrawImageI(GpGraphics* graphics, GpImage* image, INT x, INT y);
+GpStatus WINGDIPAPI GdipGetImageGraphicsContext(GpImage* image, GpGraphics** graphics);
+GpStatus WINGDIPAPI GdipFlush(GpGraphics* graphics, INT intention);
+GpStatus WINGDIPAPI GdipGraphicsClear(GpGraphics* graphics, ARGB color);
+GpStatus WINGDIPAPI GdipBitmapSetResolution(GpBitmap* bitmap, float xdpi, float ydpi);
+GpStatus WINGDIPAPI GdipGetImageHorizontalResolution(GpImage* image, float* resolution);
+GpStatus WINGDIPAPI GdipGetImageVerticalResolution(GpImage* image, float* resolution);
+GpStatus WINGDIPAPI GdipLoadImageFromStream(IStream* stream, GpImage** image);
+GpStatus WINGDIPAPI GdipDeleteGraphics(GpGraphics* graphics);
 
 #endif

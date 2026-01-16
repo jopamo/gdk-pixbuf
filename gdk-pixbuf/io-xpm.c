@@ -35,9 +35,6 @@
 #include "gdk-pixbuf-core.h"
 #include "gdk-pixbuf-io.h"
 
-
-
-
 /* I have must have done something to deserve this.
  * XPM is such a crappy format to handle.
  * This code is an ugly hybrid from gdkpixmap.c
@@ -45,29 +42,25 @@
  * It's still a mess, though.
  */
 
-enum buf_op {
-	op_header,
-	op_cmap,
-	op_body
-};
+enum buf_op { op_header, op_cmap, op_body };
 
 typedef struct {
-	gchar *color_string;
-	guint16 red;
-	guint16 green;
-	guint16 blue;
-	gint transparent;
+    gchar* color_string;
+    guint16 red;
+    guint16 green;
+    guint16 blue;
+    gint transparent;
 } XPMColor;
 
 struct file_handle {
-	FILE *infile;
-	gchar *buffer;
-	guint buffer_size;
+    FILE* infile;
+    gchar* buffer;
+    guint buffer_size;
 };
 
 struct mem_handle {
-	const gchar **data;
-	int offset;
+    const gchar** data;
+    int offset;
 };
 
 /* The following 2 routines (parse_color, find_color) come from Tk, via the Win32
@@ -77,7 +70,7 @@ struct mem_handle {
  * California, Sun Microsystems, Inc., and other parties.  The following
  * terms apply to all files associated with the software unless explicitly
  * disclaimed in individual files.
- * 
+ *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
  * that existing copyright notices are retained in all copies and that this
@@ -87,23 +80,23 @@ struct mem_handle {
  * and need not follow the licensing terms described here, provided that
  * the new terms are clearly indicated on the first page of each file where
  * they apply.
- * 
+ *
  * IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY
  * FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES
  * ARISING OUT OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY
  * DERIVATIVES THEREOF, EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.  THIS SOFTWARE
  * IS PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE
  * NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
  * MODIFICATIONS.
- * 
+ *
  * GOVERNMENT USE: If you are acquiring this software on behalf of the
  * U.S. government, the Government shall have only "Restricted Rights"
- * in the software and related documentation as defined in the Federal 
+ * in the software and related documentation as defined in the Federal
  * Acquisition Regulations (FARs) in Clause 52.227.19 (c) (2).  If you
  * are acquiring the software on behalf of the Department of Defense, the
  * software shall be classified as "Commercial Computer Software" and the
@@ -115,7 +108,7 @@ struct mem_handle {
  */
 
 #include "xpm-color-table.h"
- 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -134,29 +127,22 @@ struct mem_handle {
  *----------------------------------------------------------------------
  */
 
-static int
-compare_xcolor_entries (const void *a, const void *b)
-{
-  return g_ascii_strcasecmp ((const char *) a, 
-			     color_names + ((const XPMColorEntry *)b)->name_offset);
+static int compare_xcolor_entries(const void* a, const void* b) {
+    return g_ascii_strcasecmp((const char*)a, color_names + ((const XPMColorEntry*)b)->name_offset);
 }
 
-static gboolean
-find_color(const char *name,
-	   XPMColor   *colorPtr)
-{
-	XPMColorEntry *found;
+static gboolean find_color(const char* name, XPMColor* colorPtr) {
+    XPMColorEntry* found;
 
-	found = bsearch (name, xColors, G_N_ELEMENTS (xColors), sizeof (XPMColorEntry),
-			 compare_xcolor_entries);
-	if (found == NULL)
-	  return FALSE;
-	
-	colorPtr->red = (found->red * 65535) / 255;
-	colorPtr->green = (found->green * 65535) / 255;
-	colorPtr->blue = (found->blue * 65535) / 255;
-	
-	return TRUE;
+    found = bsearch(name, xColors, G_N_ELEMENTS(xColors), sizeof(XPMColorEntry), compare_xcolor_entries);
+    if (found == NULL)
+        return FALSE;
+
+    colorPtr->red = (found->red * 65535) / 255;
+    colorPtr->green = (found->green * 65535) / 255;
+    colorPtr->blue = (found->blue * 65535) / 255;
+
+    return TRUE;
 }
 
 /*
@@ -175,536 +161,485 @@ find_color(const char *name,
  *----------------------------------------------------------------------
  */
 
-static gboolean
-parse_color (const char *spec,
-	     XPMColor   *colorPtr)
-{
-	if (spec[0] == '#') {
-		int i, red, green, blue;
+static gboolean parse_color(const char* spec, XPMColor* colorPtr) {
+    if (spec[0] == '#') {
+        int i, red, green, blue;
 
-		if ((i = strlen (spec + 1)) % 3) {
-			return FALSE;
-		}
-		i /= 3;
+        if ((i = strlen(spec + 1)) % 3) {
+            return FALSE;
+        }
+        i /= 3;
 
-		if (i == 4) {
-			if (sscanf (spec + 1, "%4x%4x%4x", &red, &green, &blue) != 3)
-				return FALSE;
-			colorPtr->red = red;
-			colorPtr->green = green;
-			colorPtr->blue = blue;
-		} else if (i == 1) {
-			if (sscanf (spec + 1, "%1x%1x%1x", &red, &green, &blue) != 3)
-				return FALSE;
-			colorPtr->red = (red * 65535) / 15;
-			colorPtr->green = (green * 65535) / 15;
-			colorPtr->blue = (blue * 65535) / 15;
-		} else if (i == 2) {
-			if (sscanf (spec + 1, "%2x%2x%2x", &red, &green, &blue) != 3)
-				return FALSE;
-			colorPtr->red = (red * 65535) / 255;
-			colorPtr->green = (green * 65535) / 255;
-			colorPtr->blue = (blue * 65535) / 255;
-		} else /* if (i == 3) */ {
-			if (sscanf (spec + 1, "%3x%3x%3x", &red, &green, &blue) != 3)
-				return FALSE;
-			colorPtr->red = (red * 65535) / 4095;
-			colorPtr->green = (green * 65535) / 4095;
-			colorPtr->blue = (blue * 65535) / 4095;
-		}
-	} else {
-		if (!find_color(spec, colorPtr))
-			return FALSE;
-	}
-	return TRUE;
+        if (i == 4) {
+            if (sscanf(spec + 1, "%4x%4x%4x", &red, &green, &blue) != 3)
+                return FALSE;
+            colorPtr->red = red;
+            colorPtr->green = green;
+            colorPtr->blue = blue;
+        }
+        else if (i == 1) {
+            if (sscanf(spec + 1, "%1x%1x%1x", &red, &green, &blue) != 3)
+                return FALSE;
+            colorPtr->red = (red * 65535) / 15;
+            colorPtr->green = (green * 65535) / 15;
+            colorPtr->blue = (blue * 65535) / 15;
+        }
+        else if (i == 2) {
+            if (sscanf(spec + 1, "%2x%2x%2x", &red, &green, &blue) != 3)
+                return FALSE;
+            colorPtr->red = (red * 65535) / 255;
+            colorPtr->green = (green * 65535) / 255;
+            colorPtr->blue = (blue * 65535) / 255;
+        }
+        else /* if (i == 3) */ {
+            if (sscanf(spec + 1, "%3x%3x%3x", &red, &green, &blue) != 3)
+                return FALSE;
+            colorPtr->red = (red * 65535) / 4095;
+            colorPtr->green = (green * 65535) / 4095;
+            colorPtr->blue = (blue * 65535) / 4095;
+        }
+    }
+    else {
+        if (!find_color(spec, colorPtr))
+            return FALSE;
+    }
+    return TRUE;
 }
 
-static gint
-xpm_seek_string (FILE *infile, const gchar *str)
-{
-	char instr[1024];
+static gint xpm_seek_string(FILE* infile, const gchar* str) {
+    char instr[1024];
 
-	while (!feof (infile)) {
-		if (fscanf (infile, "%1023s", instr) < 0)
+    while (!feof(infile)) {
+        if (fscanf(infile, "%1023s", instr) < 0)
+            return FALSE;
+        if (strcmp(instr, str) == 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gint xpm_seek_char(FILE* infile, gchar c) {
+    gint b, oldb;
+
+    while ((b = getc(infile)) != EOF) {
+        if (c != b && b == '/') {
+            b = getc(infile);
+            if (b == EOF)
+                return FALSE;
+
+            else if (b == '*') { /* we have a comment */
+                b = -1;
+                do {
+                    oldb = b;
+                    b = getc(infile);
+                    if (b == EOF)
                         return FALSE;
-		if (strcmp (instr, str) == 0)
-			return TRUE;
-	}
+                } while (!(oldb == '*' && b == '/'));
+            }
+        }
+        else if (c == b)
+            return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
-static gint
-xpm_seek_char (FILE *infile, gchar c)
-{
-	gint b, oldb;
+static gint xpm_read_string(FILE* infile, gchar** buffer, guint* buffer_size) {
+    gint c;
+    guint cnt = 0, bufsiz, ret = FALSE;
+    gchar* buf;
 
-	while ((b = getc (infile)) != EOF) {
-		if (c != b && b == '/') {
-			b = getc (infile);
-			if (b == EOF)
-				return FALSE;
+    buf = *buffer;
+    bufsiz = *buffer_size;
+    if (buf == NULL) {
+        bufsiz = 10 * sizeof(gchar);
+        buf = g_new(gchar, bufsiz);
+    }
 
-			else if (b == '*') {	/* we have a comment */
-				b = -1;
-				do {
-					oldb = b;
-					b = getc (infile);
-					if (b == EOF)
-						return FALSE;
-				} while (!(oldb == '*' && b == '/'));
-			}
-		} else if (c == b)
-			return TRUE;
-	}
+    do {
+        c = getc(infile);
+    } while (c != EOF && c != '"');
 
-	return FALSE;
+    if (c != '"')
+        goto out;
+
+    while ((c = getc(infile)) != EOF) {
+        if (cnt == bufsiz) {
+            guint new_size = bufsiz * 2;
+
+            if (new_size > bufsiz)
+                bufsiz = new_size;
+            else
+                goto out;
+
+            buf = g_realloc(buf, bufsiz);
+            buf[bufsiz - 1] = '\0';
+        }
+
+        if (c != '"')
+            buf[cnt++] = c;
+        else {
+            buf[cnt] = 0;
+            ret = TRUE;
+            break;
+        }
+    }
+
+out:
+    buf[bufsiz - 1] = '\0'; /* ensure null termination for errors */
+    *buffer = buf;
+    *buffer_size = bufsiz;
+    return ret;
 }
 
-static gint
-xpm_read_string (FILE *infile, gchar **buffer, guint *buffer_size)
-{
-	gint c;
-	guint cnt = 0, bufsiz, ret = FALSE;
-	gchar *buf;
+static gchar* xpm_extract_color(const gchar* buffer) {
+    const gchar* p = &buffer[0];
+    gint new_key = 0;
+    gint key = 0;
+    gint current_key = 1;
+    gint space = 128;
+    gchar word[129], color[129], current_color[129];
+    gchar* r;
 
-	buf = *buffer;
-	bufsiz = *buffer_size;
-	if (buf == NULL) {
-		bufsiz = 10 * sizeof (gchar);
-		buf = g_new (gchar, bufsiz);
-	}
-
-	do {
-		c = getc (infile);
-	} while (c != EOF && c != '"');
-
-	if (c != '"')
-		goto out;
-
-	while ((c = getc (infile)) != EOF) {
-		if (cnt == bufsiz) {
-			guint new_size = bufsiz * 2;
-
-			if (new_size > bufsiz)
-				bufsiz = new_size;
-			else
-				goto out;
-
-			buf = g_realloc (buf, bufsiz);
-			buf[bufsiz - 1] = '\0';
-		}
-
-		if (c != '"')
-			buf[cnt++] = c;
-		else {
-			buf[cnt] = 0;
-			ret = TRUE;
-			break;
-		}
-	}
-
- out:
-	buf[bufsiz - 1] = '\0';	/* ensure null termination for errors */
-	*buffer = buf;
-	*buffer_size = bufsiz;
-	return ret;
-}
-
-static gchar *
-xpm_extract_color (const gchar *buffer)
-{
-	const gchar *p = &buffer[0];
-	gint new_key = 0;
-	gint key = 0;
-	gint current_key = 1;
-	gint space = 128;
-	gchar word[129], color[129], current_color[129];
-	gchar *r; 
-	
-	word[0] = '\0';
-	color[0] = '\0';
-	current_color[0] = '\0';
-        while (1) {
-		/* skip whitespace */
-		for (; *p != '\0' && g_ascii_isspace (*p); p++) {
-		} 
-		/* copy word */
-		for (r = word; *p != '\0' && !g_ascii_isspace (*p) && r - word < sizeof (word) - 1; p++, r++) {
-			*r = *p;
-		}
-		*r = '\0';
-		if (*word == '\0') {
-			if (color[0] == '\0')  /* incomplete colormap entry */
-				return NULL; 				
-			else  /* end of entry, still store the last color */
-				new_key = 1;
-		} 
-		else if (key > 0 && color[0] == '\0')  /* next word must be a color name part */
-			new_key = 0;
-		else {
-			if (strcmp (word, "c") == 0)
-				new_key = 5;
-			else if (strcmp (word, "g") == 0)
-				new_key = 4;
-			else if (strcmp (word, "g4") == 0)
-				new_key = 3;
-			else if (strcmp (word, "m") == 0)
-				new_key = 2;
-			else if (strcmp (word, "s") == 0)
-				new_key = 1;
-			else 
-				new_key = 0;
-		}
-		if (new_key == 0) {  /* word is a color name part */
-			if (key == 0)  /* key expected */
-				return NULL;
-			/* accumulate color name */
-			if (color[0] != '\0') {
-				strncat (color, " ", space);
-				space -= MIN (space, 1);
-			}
-			strncat (color, word, space);
-			space -= MIN (space, strlen (word));
-		}
-		else {  /* word is a key */
-			if (key > current_key) {
-				current_key = key;
-				strcpy (current_color, color);
-			}
-			space = 128;
-			color[0] = '\0';
-			key = new_key;
-			if (*p == '\0') break;
-		}
-		
-	}
-	if (current_key > 1)
-		return g_strdup (current_color);
-	else
-		return NULL; 
+    word[0] = '\0';
+    color[0] = '\0';
+    current_color[0] = '\0';
+    while (1) {
+        /* skip whitespace */
+        for (; *p != '\0' && g_ascii_isspace(*p); p++) {
+        }
+        /* copy word */
+        for (r = word; *p != '\0' && !g_ascii_isspace(*p) && r - word < sizeof(word) - 1; p++, r++) {
+            *r = *p;
+        }
+        *r = '\0';
+        if (*word == '\0') {
+            if (color[0] == '\0') /* incomplete colormap entry */
+                return NULL;
+            else /* end of entry, still store the last color */
+                new_key = 1;
+        }
+        else if (key > 0 && color[0] == '\0') /* next word must be a color name part */
+            new_key = 0;
+        else {
+            if (strcmp(word, "c") == 0)
+                new_key = 5;
+            else if (strcmp(word, "g") == 0)
+                new_key = 4;
+            else if (strcmp(word, "g4") == 0)
+                new_key = 3;
+            else if (strcmp(word, "m") == 0)
+                new_key = 2;
+            else if (strcmp(word, "s") == 0)
+                new_key = 1;
+            else
+                new_key = 0;
+        }
+        if (new_key == 0) { /* word is a color name part */
+            if (key == 0)   /* key expected */
+                return NULL;
+            /* accumulate color name */
+            if (color[0] != '\0') {
+                strncat(color, " ", space);
+                space -= MIN(space, 1);
+            }
+            strncat(color, word, space);
+            space -= MIN(space, strlen(word));
+        }
+        else { /* word is a key */
+            if (key > current_key) {
+                current_key = key;
+                strcpy(current_color, color);
+            }
+            space = 128;
+            color[0] = '\0';
+            key = new_key;
+            if (*p == '\0')
+                break;
+        }
+    }
+    if (current_key > 1)
+        return g_strdup(current_color);
+    else
+        return NULL;
 }
 
 /* (almost) direct copy from gdkpixmap.c... loads an XPM from a file */
 
-static const gchar *
-file_buffer (enum buf_op op, gpointer handle)
-{
-	struct file_handle *h = handle;
+static const gchar* file_buffer(enum buf_op op, gpointer handle) {
+    struct file_handle* h = handle;
 
-	switch (op) {
-	case op_header:
-		if (xpm_seek_string (h->infile, "XPM") != TRUE)
-			break;
+    switch (op) {
+        case op_header:
+            if (xpm_seek_string(h->infile, "XPM") != TRUE)
+                break;
 
-		if (xpm_seek_char (h->infile, '{') != TRUE)
-			break;
-		/* Fall through to the next xpm_seek_char. */
+            if (xpm_seek_char(h->infile, '{') != TRUE)
+                break;
+            /* Fall through to the next xpm_seek_char. */
 
-	case op_cmap:
-		xpm_seek_char (h->infile, '"');
-		if (fseek (h->infile, -1, SEEK_CUR) != 0)
-			return NULL;
-		/* Fall through to the xpm_read_string. */
+        case op_cmap:
+            xpm_seek_char(h->infile, '"');
+            if (fseek(h->infile, -1, SEEK_CUR) != 0)
+                return NULL;
+            /* Fall through to the xpm_read_string. */
 
-	case op_body:
-		if(!xpm_read_string (h->infile, &h->buffer, &h->buffer_size))
-			return NULL;
-		return h->buffer;
+        case op_body:
+            if (!xpm_read_string(h->infile, &h->buffer, &h->buffer_size))
+                return NULL;
+            return h->buffer;
 
-	default:
-		g_assert_not_reached ();
-	}
+        default:
+            g_assert_not_reached();
+    }
 
-	return NULL;
+    return NULL;
 }
 
 /* This reads from memory */
-static const gchar *
-mem_buffer (enum buf_op op, gpointer handle)
-{
-	struct mem_handle *h = handle;
-	switch (op) {
-	case op_header:
-	case op_cmap:
-	case op_body:
-                if (h->data[h->offset]) {
-                        const gchar* retval;
+static const gchar* mem_buffer(enum buf_op op, gpointer handle) {
+    struct mem_handle* h = handle;
+    switch (op) {
+        case op_header:
+        case op_cmap:
+        case op_body:
+            if (h->data[h->offset]) {
+                const gchar* retval;
 
-                        retval = h->data[h->offset];
-                        h->offset += 1;
-                        return retval;
-                }
-                break;
+                retval = h->data[h->offset];
+                h->offset += 1;
+                return retval;
+            }
+            break;
 
-	default:
-		g_assert_not_reached ();
-                break;
-	}
+        default:
+            g_assert_not_reached();
+            break;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 /* This function does all the work. */
-static GdkPixbuf *
-pixbuf_create_from_xpm (const gchar * (*get_buf) (enum buf_op op, gpointer handle), gpointer handle,
-                        GError **error)
-{
-	gint w, h, n_col, cpp, x_hot, y_hot, items;
-	gint cnt, xcnt, ycnt, wbytes, n;
-	gint is_trans = FALSE;
-	const gchar *buffer;
-        gchar *name_buf;
-	gchar pixel_str[32];
-	GHashTable *color_hash;
-	XPMColor *colors, *color, *fallbackcolor;
-	guchar *pixtmp;
-	GdkPixbuf *pixbuf = NULL;
-	gint rowstride;
+static GdkPixbuf* pixbuf_create_from_xpm(const gchar* (*get_buf)(enum buf_op op, gpointer handle),
+                                         gpointer handle,
+                                         GError** error) {
+    gint w, h, n_col, cpp, x_hot, y_hot, items;
+    gint cnt, xcnt, ycnt, wbytes, n;
+    gint is_trans = FALSE;
+    const gchar* buffer;
+    gchar* name_buf;
+    gchar pixel_str[32];
+    GHashTable* color_hash;
+    XPMColor *colors, *color, *fallbackcolor;
+    guchar* pixtmp;
+    GdkPixbuf* pixbuf = NULL;
+    gint rowstride;
 
-	fallbackcolor = NULL;
+    fallbackcolor = NULL;
 
-	buffer = (*get_buf) (op_header, handle);
-	if (!buffer) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("No XPM header found"));
-		return NULL;
-	}
-	items = sscanf (buffer, "%d %d %d %d %d %d", &w, &h, &n_col, &cpp, &x_hot, &y_hot);
+    buffer = (*get_buf)(op_header, handle);
+    if (!buffer) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("No XPM header found"));
+        return NULL;
+    }
+    items = sscanf(buffer, "%d %d %d %d %d %d", &w, &h, &n_col, &cpp, &x_hot, &y_hot);
 
-	if (items != 4 && items != 6) {
-		g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("Invalid XPM header"));
-		return NULL;
-	}
+    if (items != 4 && items != 6) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("Invalid XPM header"));
+        return NULL;
+    }
 
-	if (w <= 0) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("XPM file has image width <= 0"));
-		return NULL;
+    if (w <= 0) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                            _("XPM file has image width <= 0"));
+        return NULL;
+    }
+    if (h <= 0) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                            _("XPM file has image height <= 0"));
+        return NULL;
+    }
+    /* Check from libXpm's ParsePixels() */
+    if ((h > 0 && w >= UINT_MAX / h) || w * h >= UINT_MAX / sizeof(unsigned int)) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("Invalid XPM header"));
+        return NULL;
+    }
+    if (cpp <= 0 || cpp >= 32 || w >= G_MAXINT / cpp) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                            _("XPM has invalid number of chars per pixel"));
+        return NULL;
+    }
+    if (n_col <= 0 || n_col >= G_MAXINT / (cpp + 1) || n_col >= G_MAXINT / sizeof(XPMColor)) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                            _("XPM file has invalid number of colors"));
+        return NULL;
+    }
 
-	}
-	if (h <= 0) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("XPM file has image height <= 0"));
-		return NULL;
+    /* The hash is used for fast lookups of color from chars */
+    color_hash = g_hash_table_new(g_str_hash, g_str_equal);
 
-	}
-	/* Check from libXpm's ParsePixels() */
-	if ((h > 0 && w >= UINT_MAX / h) ||
-	    w * h >= UINT_MAX / sizeof(unsigned int)) {
-		g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("Invalid XPM header"));
-		return NULL;
-	}
-	if (cpp <= 0 || cpp >= 32 || w >= G_MAXINT / cpp) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("XPM has invalid number of chars per pixel"));
-		return NULL;
-	}
-	if (n_col <= 0 || 
-	    n_col >= G_MAXINT / (cpp + 1) || 
-	    n_col >= G_MAXINT / sizeof (XPMColor)) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                     _("XPM file has invalid number of colors"));
-		return NULL;
-	}
+    name_buf = g_try_malloc(n_col * (cpp + 1));
+    if (!name_buf) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                            _("Cannot allocate memory for loading XPM image"));
+        g_hash_table_destroy(color_hash);
+        return NULL;
+    }
+    colors = (XPMColor*)g_try_malloc(sizeof(XPMColor) * n_col);
+    if (!colors) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                            _("Cannot allocate memory for loading XPM image"));
+        g_hash_table_destroy(color_hash);
+        g_free(name_buf);
+        return NULL;
+    }
 
-	/* The hash is used for fast lookups of color from chars */
-	color_hash = g_hash_table_new (g_str_hash, g_str_equal);
+    for (cnt = 0; cnt < n_col; cnt++) {
+        gchar* color_name;
 
-	name_buf = g_try_malloc (n_col * (cpp + 1));
-	if (!name_buf) {
-		g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                     _("Cannot allocate memory for loading XPM image"));
-		g_hash_table_destroy (color_hash);
-		return NULL;
-	}
-	colors = (XPMColor *) g_try_malloc (sizeof (XPMColor) * n_col);
-	if (!colors) {
-		g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                     _("Cannot allocate memory for loading XPM image"));
-		g_hash_table_destroy (color_hash);
-		g_free (name_buf);
-		return NULL;
-	}
+        buffer = (*get_buf)(op_cmap, handle);
+        if (!buffer) {
+            g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("Cannot read XPM colormap"));
+            goto out;
+        }
 
-	for (cnt = 0; cnt < n_col; cnt++) {
-		gchar *color_name;
+        color = &colors[cnt];
+        color->color_string = &name_buf[cnt * (cpp + 1)];
+        strncpy(color->color_string, buffer, cpp);
+        color->color_string[cpp] = 0;
+        buffer += strlen(color->color_string);
+        color->transparent = FALSE;
 
-		buffer = (*get_buf) (op_cmap, handle);
-		if (!buffer) {
-                        g_set_error_literal (error,
-                                             GDK_PIXBUF_ERROR,
-                                             GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-                                             _("Cannot read XPM colormap"));
-                        goto out;
-		}
+        color_name = xpm_extract_color(buffer);
 
-		color = &colors[cnt];
-		color->color_string = &name_buf[cnt * (cpp + 1)];
-		strncpy (color->color_string, buffer, cpp);
-		color->color_string[cpp] = 0;
-		buffer += strlen (color->color_string);
-		color->transparent = FALSE;
+        if ((color_name == NULL) || (g_ascii_strcasecmp(color_name, "None") == 0) ||
+            (parse_color(color_name, color) == FALSE)) {
+            color->transparent = TRUE;
+            color->red = 0;
+            color->green = 0;
+            color->blue = 0;
+            is_trans = TRUE;
+        }
 
-		color_name = xpm_extract_color (buffer);
+        g_free(color_name);
+        g_hash_table_insert(color_hash, color->color_string, color);
 
-		if ((color_name == NULL) || (g_ascii_strcasecmp (color_name, "None") == 0)
-		    || (parse_color (color_name, color) == FALSE)) {
-			color->transparent = TRUE;
-			color->red = 0;
-			color->green = 0;
-			color->blue = 0;
-			is_trans = TRUE;
-		}
+        if (cnt == 0)
+            fallbackcolor = color;
+    }
 
-		g_free (color_name);
-		g_hash_table_insert (color_hash, color->color_string, color);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, is_trans, 8, w, h);
 
-		if (cnt == 0)
-			fallbackcolor = color;
-	}
+    if (!pixbuf) {
+        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
+                            _("Cannot allocate memory for loading XPM image"));
+        goto out;
+    }
 
-	pixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, is_trans, 8, w, h);
+    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
 
-	if (!pixbuf) {
-                g_set_error_literal (error,
-                                     GDK_PIXBUF_ERROR,
-                                     GDK_PIXBUF_ERROR_INSUFFICIENT_MEMORY,
-                                     _("Cannot allocate memory for loading XPM image"));
-                goto out;
-	}
+    wbytes = w * cpp;
 
-	rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+    for (ycnt = 0; ycnt < h; ycnt++) {
+        pixtmp = gdk_pixbuf_get_pixels(pixbuf) + ycnt * rowstride;
 
-	wbytes = w * cpp;
+        buffer = (*get_buf)(op_body, handle);
+        if ((!buffer) || (strlen(buffer) < wbytes)) {
+            /* Advertised width doesn't match pixels */
+            g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
+                                _("Dimensions do not match data"));
+            goto out;
+        }
 
-	for (ycnt = 0; ycnt < h; ycnt++) {
-		pixtmp = gdk_pixbuf_get_pixels (pixbuf) + ycnt * rowstride;
+        for (n = 0, xcnt = 0; n < wbytes; n += cpp, xcnt++) {
+            strncpy(pixel_str, &buffer[n], cpp);
+            pixel_str[cpp] = 0;
 
-		buffer = (*get_buf) (op_body, handle);
-		if ((!buffer) || (strlen (buffer) < wbytes)) {
-			/* Advertised width doesn't match pixels */
-			g_set_error_literal (error,
-					     GDK_PIXBUF_ERROR,
-					     GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
-					     _("Dimensions do not match data"));
-			goto out;
-		}
+            color = g_hash_table_lookup(color_hash, pixel_str);
 
-		for (n = 0, xcnt = 0; n < wbytes; n += cpp, xcnt++) {
-			strncpy (pixel_str, &buffer[n], cpp);
-			pixel_str[cpp] = 0;
+            /* Bad XPM...punt */
+            if (!color)
+                color = fallbackcolor;
 
-			color = g_hash_table_lookup (color_hash, pixel_str);
+            *pixtmp++ = color->red >> 8;
+            *pixtmp++ = color->green >> 8;
+            *pixtmp++ = color->blue >> 8;
 
-			/* Bad XPM...punt */
-			if (!color)
-				color = fallbackcolor;
+            if (is_trans && color->transparent)
+                *pixtmp++ = 0;
+            else if (is_trans)
+                *pixtmp++ = 0xFF;
+        }
+    }
 
-			*pixtmp++ = color->red >> 8;
-			*pixtmp++ = color->green >> 8;
-			*pixtmp++ = color->blue >> 8;
+    g_hash_table_destroy(color_hash);
+    g_free(colors);
+    g_free(name_buf);
 
-			if (is_trans && color->transparent)
-				*pixtmp++ = 0;
-			else if (is_trans)
-				*pixtmp++ = 0xFF;
-		}
-	}
+    if (items == 6) {
+        gchar hot[10];
+        g_snprintf(hot, 10, "%d", x_hot);
+        gdk_pixbuf_set_option(pixbuf, "x_hot", hot);
+        g_snprintf(hot, 10, "%d", y_hot);
+        gdk_pixbuf_set_option(pixbuf, "y_hot", hot);
+    }
 
-	g_hash_table_destroy (color_hash);
-	g_free (colors);
-	g_free (name_buf);
-
-	if (items == 6) {
-		gchar hot[10];
-		g_snprintf (hot, 10, "%d", x_hot);
-		gdk_pixbuf_set_option (pixbuf, "x_hot", hot);
-		g_snprintf (hot, 10, "%d", y_hot);
-		gdk_pixbuf_set_option (pixbuf, "y_hot", hot);
-
-	}
-
-	return pixbuf;
+    return pixbuf;
 
 out:
-	g_hash_table_destroy (color_hash);
-	g_free (colors);
-	g_free (name_buf);
+    g_hash_table_destroy(color_hash);
+    g_free(colors);
+    g_free(name_buf);
 
-	g_clear_object (&pixbuf);
-	return NULL;
+    g_clear_object(&pixbuf);
+    return NULL;
 }
 
 /* Shared library entry point for file loading */
-static GdkPixbuf *
-gdk_pixbuf__xpm_image_load (FILE *f,
-                            GError **error)
-{
-	GdkPixbuf *pixbuf;
-	struct file_handle h;
+static GdkPixbuf* gdk_pixbuf__xpm_image_load(FILE* f, GError** error) {
+    GdkPixbuf* pixbuf;
+    struct file_handle h;
 
-	memset (&h, 0, sizeof (h));
-	h.infile = f;
-	pixbuf = pixbuf_create_from_xpm (file_buffer, &h, error);
-	g_free (h.buffer);
+    memset(&h, 0, sizeof(h));
+    h.infile = f;
+    pixbuf = pixbuf_create_from_xpm(file_buffer, &h, error);
+    g_free(h.buffer);
 
-	return pixbuf;
+    return pixbuf;
 }
 
 /* Shared library entry point for memory loading */
-static GdkPixbuf *
-gdk_pixbuf__xpm_image_load_xpm_data (const gchar **data)
-{
-        GdkPixbuf *pixbuf;
-        struct mem_handle h;
-        GError *error = NULL;
-        
-        h.data = data;
-        h.offset = 0;
-        
-	pixbuf = pixbuf_create_from_xpm (mem_buffer, &h, &error);
+static GdkPixbuf* gdk_pixbuf__xpm_image_load_xpm_data(const gchar** data) {
+    GdkPixbuf* pixbuf;
+    struct mem_handle h;
+    GError* error = NULL;
 
-        if (error) {
-                g_warning ("Inline XPM data is broken: %s", error->message);
-                g_error_free (error);
-                error = NULL;
-        }
-        
-	return pixbuf;
+    h.data = data;
+    h.offset = 0;
+
+    pixbuf = pixbuf_create_from_xpm(mem_buffer, &h, &error);
+
+    if (error) {
+        g_warning("Inline XPM data is broken: %s", error->message);
+        g_error_free(error);
+        error = NULL;
+    }
+
+    return pixbuf;
 }
 
 /* Progressive loader */
 typedef struct _XPMContext XPMContext;
-struct _XPMContext
-{
-       GdkPixbufModulePreparedFunc prepared_func;
-       GdkPixbufModuleUpdatedFunc updated_func;
-       gpointer user_data;
+struct _XPMContext {
+    GdkPixbufModulePreparedFunc prepared_func;
+    GdkPixbufModuleUpdatedFunc updated_func;
+    gpointer user_data;
 
-       gchar *tempname;
-       FILE *file;
-       gboolean all_okay;
+    gchar* tempname;
+    FILE* file;
+    gboolean all_okay;
 };
 
 /*
@@ -713,138 +648,109 @@ struct _XPMContext
  * This is very broken but it should be relatively simple to fix
  * in the future.
  */
-static gpointer
-gdk_pixbuf__xpm_image_begin_load (GdkPixbufModuleSizeFunc size_func,
-                                  GdkPixbufModulePreparedFunc prepared_func,
-                                  GdkPixbufModuleUpdatedFunc updated_func,
-                                  gpointer user_data,
-                                  GError **error)
-{
-       XPMContext *context;
-       gint fd;
+static gpointer gdk_pixbuf__xpm_image_begin_load(GdkPixbufModuleSizeFunc size_func,
+                                                 GdkPixbufModulePreparedFunc prepared_func,
+                                                 GdkPixbufModuleUpdatedFunc updated_func,
+                                                 gpointer user_data,
+                                                 GError** error) {
+    XPMContext* context;
+    gint fd;
 
-       g_assert (size_func != NULL);
-       g_assert (prepared_func != NULL);
-       g_assert (updated_func != NULL);
+    g_assert(size_func != NULL);
+    g_assert(prepared_func != NULL);
+    g_assert(updated_func != NULL);
 
-       context = g_new (XPMContext, 1);
-       context->prepared_func = prepared_func;
-       context->updated_func = updated_func;
-       context->user_data = user_data;
-       context->all_okay = TRUE;
-       fd = g_file_open_tmp ("gdkpixbuf-xpm-tmp.XXXXXX", &context->tempname,
-			     NULL);
-       if (fd < 0) {
-               g_free (context);
-               return NULL;
-       }
+    context = g_new(XPMContext, 1);
+    context->prepared_func = prepared_func;
+    context->updated_func = updated_func;
+    context->user_data = user_data;
+    context->all_okay = TRUE;
+    fd = g_file_open_tmp("gdkpixbuf-xpm-tmp.XXXXXX", &context->tempname, NULL);
+    if (fd < 0) {
+        g_free(context);
+        return NULL;
+    }
 
-       context->file = fdopen (fd, "w+");
-       if (context->file == NULL) {
-               g_free (context->tempname);
-               g_free (context);
-               return NULL;
-       }
+    context->file = fdopen(fd, "w+");
+    if (context->file == NULL) {
+        g_free(context->tempname);
+        g_free(context);
+        return NULL;
+    }
 
-       return context;
+    return context;
 }
 
-static gboolean
-gdk_pixbuf__xpm_image_stop_load (gpointer data,
-                                 GError **error)
-{
-       XPMContext *context = (XPMContext*) data;
-       GdkPixbuf *pixbuf;
-       gboolean retval = FALSE;
-       
-       g_return_val_if_fail (data != NULL, FALSE);
+static gboolean gdk_pixbuf__xpm_image_stop_load(gpointer data, GError** error) {
+    XPMContext* context = (XPMContext*)data;
+    GdkPixbuf* pixbuf;
+    gboolean retval = FALSE;
 
-       fflush (context->file);
-       rewind (context->file);
-       if (context->all_okay) {
-               pixbuf = gdk_pixbuf__xpm_image_load (context->file, error);
+    g_return_val_if_fail(data != NULL, FALSE);
 
-               if (pixbuf != NULL) {
-		       (* context->prepared_func) (pixbuf,
-						   NULL,
-						   context->user_data);
-		       (* context->updated_func) (pixbuf,
-						  0, 0,
-						  gdk_pixbuf_get_width (pixbuf),
-						  gdk_pixbuf_get_height (pixbuf),
-						  context->user_data);
-                       g_object_unref (pixbuf);
+    fflush(context->file);
+    rewind(context->file);
+    if (context->all_okay) {
+        pixbuf = gdk_pixbuf__xpm_image_load(context->file, error);
 
-                       retval = TRUE;
-               }
-       }
+        if (pixbuf != NULL) {
+            (*context->prepared_func)(pixbuf, NULL, context->user_data);
+            (*context->updated_func)(pixbuf, 0, 0, gdk_pixbuf_get_width(pixbuf), gdk_pixbuf_get_height(pixbuf),
+                                     context->user_data);
+            g_object_unref(pixbuf);
 
-       fclose (context->file);
-       g_unlink (context->tempname);
-       g_free (context->tempname);
-       g_free ((XPMContext *) context);
+            retval = TRUE;
+        }
+    }
 
-       return retval;
+    fclose(context->file);
+    g_unlink(context->tempname);
+    g_free(context->tempname);
+    g_free((XPMContext*)context);
+
+    return retval;
 }
 
-static gboolean
-gdk_pixbuf__xpm_image_load_increment (gpointer data,
-                                      const guchar *buf,
-                                      guint    size,
-                                      GError **error)
-{
-       XPMContext *context = (XPMContext *) data;
+static gboolean gdk_pixbuf__xpm_image_load_increment(gpointer data, const guchar* buf, guint size, GError** error) {
+    XPMContext* context = (XPMContext*)data;
 
-       g_return_val_if_fail (data != NULL, FALSE);
+    g_return_val_if_fail(data != NULL, FALSE);
 
-       if (fwrite (buf, sizeof (guchar), size, context->file) != size) {
-	       gint save_errno = errno;
-               context->all_okay = FALSE;
-               g_set_error_literal (error,
-                                    G_FILE_ERROR,
-                                    g_file_error_from_errno (save_errno),
-                                    _("Failed to write to temporary file when loading XPM image"));
-               return FALSE;
-       }
+    if (fwrite(buf, sizeof(guchar), size, context->file) != size) {
+        gint save_errno = errno;
+        context->all_okay = FALSE;
+        g_set_error_literal(error, G_FILE_ERROR, g_file_error_from_errno(save_errno),
+                            _("Failed to write to temporary file when loading XPM image"));
+        return FALSE;
+    }
 
-       return TRUE;
+    return TRUE;
 }
 
 #ifndef INCLUDE_xpm
 #define MODULE_ENTRY(function) G_MODULE_EXPORT void function
 #else
-#define MODULE_ENTRY(function) void _gdk_pixbuf__xpm_ ## function
+#define MODULE_ENTRY(function) void _gdk_pixbuf__xpm_##function
 #endif
 
-MODULE_ENTRY (fill_vtable) (GdkPixbufModule *module)
-{
-	module->load = gdk_pixbuf__xpm_image_load;
-	module->load_xpm_data = gdk_pixbuf__xpm_image_load_xpm_data;
-	module->begin_load = gdk_pixbuf__xpm_image_begin_load;
-	module->stop_load = gdk_pixbuf__xpm_image_stop_load;
-	module->load_increment = gdk_pixbuf__xpm_image_load_increment;
+MODULE_ENTRY(fill_vtable)(GdkPixbufModule* module) {
+    module->load = gdk_pixbuf__xpm_image_load;
+    module->load_xpm_data = gdk_pixbuf__xpm_image_load_xpm_data;
+    module->begin_load = gdk_pixbuf__xpm_image_begin_load;
+    module->stop_load = gdk_pixbuf__xpm_image_stop_load;
+    module->load_increment = gdk_pixbuf__xpm_image_load_increment;
 }
 
-MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
-{
-	static const GdkPixbufModulePattern signature[] = {
-		{ "/* XPM */", NULL, 100 },
-		{ NULL, NULL, 0 }
-	};
-	static const gchar *mime_types[] = {
-		"image/x-xpixmap",
-		NULL
-	};
-	static const gchar *extensions[] = {
-		"xpm",
-		NULL
-	};
+MODULE_ENTRY(fill_info)(GdkPixbufFormat* info) {
+    static const GdkPixbufModulePattern signature[] = {{"/* XPM */", NULL, 100}, {NULL, NULL, 0}};
+    static const gchar* mime_types[] = {"image/x-xpixmap", NULL};
+    static const gchar* extensions[] = {"xpm", NULL};
 
-	info->name = "xpm";
-	info->signature = (GdkPixbufModulePattern *) signature;
-	info->description = NC_("image format", "XPM");
-	info->mime_types = (gchar **) mime_types;
-	info->extensions = (gchar **) extensions;
-	info->flags = GDK_PIXBUF_FORMAT_THREADSAFE;
-	info->license = "LGPL";
+    info->name = "xpm";
+    info->signature = (GdkPixbufModulePattern*)signature;
+    info->description = NC_("image format", "XPM");
+    info->mime_types = (gchar**)mime_types;
+    info->extensions = (gchar**)extensions;
+    info->flags = GDK_PIXBUF_FORMAT_THREADSAFE;
+    info->license = "LGPL";
 }

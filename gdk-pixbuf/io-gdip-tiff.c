@@ -24,65 +24,51 @@
 
 #include "io-gdip-utils.h"
 
-static gboolean
-gdk_pixbuf__gdip_image_save_TIFF_to_callback (GdkPixbufSaveFunc   save_func,
-                                              gpointer            user_data,
-                                              GdkPixbuf          *pixbuf,
-                                              gchar             **keys,
-                                              gchar             **values,
-                                              GError            **error)
-{
-  return gdip_save_pixbuf (pixbuf, L"image/tiff", NULL, save_func, user_data, error);
+static gboolean gdk_pixbuf__gdip_image_save_TIFF_to_callback(GdkPixbufSaveFunc save_func,
+                                                             gpointer user_data,
+                                                             GdkPixbuf* pixbuf,
+                                                             gchar** keys,
+                                                             gchar** values,
+                                                             GError** error) {
+    return gdip_save_pixbuf(pixbuf, L"image/tiff", NULL, save_func, user_data, error);
 }
 
-static gboolean
-gdk_pixbuf__gdip_image_save_TIFF (FILE         *f,
-                                 GdkPixbuf     *pixbuf,
-                                 gchar        **keys,
-                                 gchar        **values,
-                                 GError       **error)
-{
-  return gdk_pixbuf__gdip_image_save_TIFF_to_callback (gdip_save_to_file_callback, f, pixbuf, keys, values, error);
+static gboolean gdk_pixbuf__gdip_image_save_TIFF(FILE* f,
+                                                 GdkPixbuf* pixbuf,
+                                                 gchar** keys,
+                                                 gchar** values,
+                                                 GError** error) {
+    return gdk_pixbuf__gdip_image_save_TIFF_to_callback(gdip_save_to_file_callback, f, pixbuf, keys, values, error);
 }
 
 #ifndef INCLUDE_gdiplus
 #define MODULE_ENTRY(function) G_MODULE_EXPORT void function
 #else
-#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_tiff_ ## function
+#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_tiff_##function
 #endif
 
-MODULE_ENTRY (fill_vtable) (GdkPixbufModule *module)
-{
-  gdip_fill_vtable (module);
+MODULE_ENTRY(fill_vtable)(GdkPixbufModule* module) {
+    gdip_fill_vtable(module);
 
-  module->save_to_callback = gdk_pixbuf__gdip_image_save_TIFF_to_callback;
-  module->save = gdk_pixbuf__gdip_image_save_TIFF; /* for gtk < 2.14, you need to implement both. otherwise gdk-pixbuf-queryloaders fails */
+    module->save_to_callback = gdk_pixbuf__gdip_image_save_TIFF_to_callback;
+    module->save = gdk_pixbuf__gdip_image_save_TIFF; /* for gtk < 2.14, you need to implement both. otherwise
+                                                        gdk-pixbuf-queryloaders fails */
 }
 
-MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
-{
-  static const GdkPixbufModulePattern signature[] = {
-    { "MM \x2a", "  z ", 100 }, /* TIFF */
-    { "II\x2a ", "   z", 100 }, /* TIFF */
-    { NULL, NULL, 0 }
-  };
+MODULE_ENTRY(fill_info)(GdkPixbufFormat* info) {
+    static const GdkPixbufModulePattern signature[] = {{"MM \x2a", "  z ", 100}, /* TIFF */
+                                                       {"II\x2a ", "   z", 100}, /* TIFF */
+                                                       {NULL, NULL, 0}};
 
-  static const gchar *mime_types[] = {
-    "image/tiff",
-    NULL
-  };
+    static const gchar* mime_types[] = {"image/tiff", NULL};
 
-  static const gchar *extensions[] = {
-    "tiff",
-    "tif",
-    NULL
-  };
+    static const gchar* extensions[] = {"tiff", "tif", NULL};
 
-  info->name        = "tiff";
-  info->signature   = (GdkPixbufModulePattern *) signature;
-  info->description = NC_("image format", "TIFF");
-  info->mime_types  = (gchar **) mime_types;
-  info->extensions  = (gchar **) extensions;
-  info->flags       = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
-  info->license     = "LGPL";
+    info->name = "tiff";
+    info->signature = (GdkPixbufModulePattern*)signature;
+    info->description = NC_("image format", "TIFF");
+    info->mime_types = (gchar**)mime_types;
+    info->extensions = (gchar**)extensions;
+    info->flags = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
+    info->license = "LGPL";
 }

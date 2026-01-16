@@ -24,13 +24,12 @@
 #ifndef GDK_PIXBUF_TRANSFORM_H
 #define GDK_PIXBUF_TRANSFORM_H
 
-#if defined(GDK_PIXBUF_DISABLE_SINGLE_INCLUDES) && !defined (GDK_PIXBUF_H_INSIDE) && !defined (GDK_PIXBUF_COMPILATION)
+#if defined(GDK_PIXBUF_DISABLE_SINGLE_INCLUDES) && !defined(GDK_PIXBUF_H_INSIDE) && !defined(GDK_PIXBUF_COMPILATION)
 #error "Only <gdk-pixbuf/gdk-pixbuf.h> can be included directly."
 #endif
 
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf-core.h>
-
 
 G_BEGIN_DECLS
 
@@ -39,7 +38,7 @@ G_BEGIN_DECLS
 /**
  * GdkInterpType:
  * @GDK_INTERP_NEAREST: Nearest neighbor sampling; this is the fastest
- *  and lowest quality mode. Quality is normally unacceptable when scaling 
+ *  and lowest quality mode. Quality is normally unacceptable when scaling
  *  down, but may be OK when scaling up.
  * @GDK_INTERP_TILES: This is an accurate simulation of the PostScript
  *  image operator without any interpolation enabled.  Each pixel is
@@ -66,16 +65,11 @@ G_BEGIN_DECLS
  * horrible quality when scaling down; `GDK_INTERP_BILINEAR` is the best
  * choice if you aren't sure what to choose, it has a good speed/quality
  * balance.
- * 
+ *
  * **Note**: Cubic filtering is missing from the list; hyperbolic
  * interpolation is just as fast and results in higher quality.
  */
-typedef enum {
-	GDK_INTERP_NEAREST,
-	GDK_INTERP_TILES,
-	GDK_INTERP_BILINEAR,
-	GDK_INTERP_HYPER
-} GdkInterpType;
+typedef enum { GDK_INTERP_NEAREST, GDK_INTERP_TILES, GDK_INTERP_BILINEAR, GDK_INTERP_HYPER } GdkInterpType;
 
 /**
  * GdkPixbufRotation:
@@ -83,86 +77,80 @@ typedef enum {
  * @GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE: Rotate by 90 degrees.
  * @GDK_PIXBUF_ROTATE_UPSIDEDOWN: Rotate by 180 degrees.
  * @GDK_PIXBUF_ROTATE_CLOCKWISE: Rotate by 270 degrees.
- * 
+ *
  * The possible rotations which can be passed to gdk_pixbuf_rotate_simple().
  *
  * To make them easier to use, their numerical values are the actual degrees.
  */
 typedef enum {
-	GDK_PIXBUF_ROTATE_NONE             =   0,
-	GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE =  90,
-	GDK_PIXBUF_ROTATE_UPSIDEDOWN       = 180,
-	GDK_PIXBUF_ROTATE_CLOCKWISE        = 270
+    GDK_PIXBUF_ROTATE_NONE = 0,
+    GDK_PIXBUF_ROTATE_COUNTERCLOCKWISE = 90,
+    GDK_PIXBUF_ROTATE_UPSIDEDOWN = 180,
+    GDK_PIXBUF_ROTATE_CLOCKWISE = 270
 } GdkPixbufRotation;
 
 GDK_PIXBUF_AVAILABLE_IN_ALL
-void gdk_pixbuf_scale           (const GdkPixbuf *src,
-				 GdkPixbuf       *dest,
-				 int              dest_x,
-				 int              dest_y,
-				 int              dest_width,
-				 int              dest_height,
-				 double           offset_x,
-				 double           offset_y,
-				 double           scale_x,
-				 double           scale_y,
-				 GdkInterpType    interp_type);
+void gdk_pixbuf_scale(const GdkPixbuf* src,
+                      GdkPixbuf* dest,
+                      int dest_x,
+                      int dest_y,
+                      int dest_width,
+                      int dest_height,
+                      double offset_x,
+                      double offset_y,
+                      double scale_x,
+                      double scale_y,
+                      GdkInterpType interp_type);
 GDK_PIXBUF_AVAILABLE_IN_ALL
-void gdk_pixbuf_composite       (const GdkPixbuf *src,
-				 GdkPixbuf       *dest,
-				 int              dest_x,
-				 int              dest_y,
-				 int              dest_width,
-				 int              dest_height,
-				 double           offset_x,
-				 double           offset_y,
-				 double           scale_x,
-				 double           scale_y,
-				 GdkInterpType    interp_type,
-				 int              overall_alpha);
+void gdk_pixbuf_composite(const GdkPixbuf* src,
+                          GdkPixbuf* dest,
+                          int dest_x,
+                          int dest_y,
+                          int dest_width,
+                          int dest_height,
+                          double offset_x,
+                          double offset_y,
+                          double scale_x,
+                          double scale_y,
+                          GdkInterpType interp_type,
+                          int overall_alpha);
 GDK_PIXBUF_AVAILABLE_IN_ALL
-void gdk_pixbuf_composite_color (const GdkPixbuf *src,
-				 GdkPixbuf       *dest,
-				 int              dest_x,
-				 int              dest_y,
-				 int              dest_width,
-				 int              dest_height,
-				 double           offset_x,
-				 double           offset_y,
-				 double           scale_x,
-				 double           scale_y,
-				 GdkInterpType    interp_type,
-				 int              overall_alpha,
-				 int              check_x,
-				 int              check_y,
-				 int              check_size,
-				 guint32          color1,
-				 guint32          color2);
+void gdk_pixbuf_composite_color(const GdkPixbuf* src,
+                                GdkPixbuf* dest,
+                                int dest_x,
+                                int dest_y,
+                                int dest_width,
+                                int dest_height,
+                                double offset_x,
+                                double offset_y,
+                                double scale_x,
+                                double scale_y,
+                                GdkInterpType interp_type,
+                                int overall_alpha,
+                                int check_x,
+                                int check_y,
+                                int check_size,
+                                guint32 color1,
+                                guint32 color2);
 
 GDK_PIXBUF_AVAILABLE_IN_ALL
-GdkPixbuf *gdk_pixbuf_scale_simple           (const GdkPixbuf *src,
-					      int              dest_width,
-					      int              dest_height,
-					      GdkInterpType    interp_type);
+GdkPixbuf* gdk_pixbuf_scale_simple(const GdkPixbuf* src, int dest_width, int dest_height, GdkInterpType interp_type);
 
 GDK_PIXBUF_AVAILABLE_IN_ALL
-GdkPixbuf *gdk_pixbuf_composite_color_simple (const GdkPixbuf *src,
-					      int              dest_width,
-					      int              dest_height,
-					      GdkInterpType    interp_type,
-					      int              overall_alpha,
-					      int              check_size,
-					      guint32          color1,
-					      guint32          color2);
+GdkPixbuf* gdk_pixbuf_composite_color_simple(const GdkPixbuf* src,
+                                             int dest_width,
+                                             int dest_height,
+                                             GdkInterpType interp_type,
+                                             int overall_alpha,
+                                             int check_size,
+                                             guint32 color1,
+                                             guint32 color2);
 
 GDK_PIXBUF_AVAILABLE_IN_2_6
-GdkPixbuf *gdk_pixbuf_rotate_simple          (const GdkPixbuf   *src,
-				              GdkPixbufRotation  angle);
+GdkPixbuf* gdk_pixbuf_rotate_simple(const GdkPixbuf* src, GdkPixbufRotation angle);
 GDK_PIXBUF_AVAILABLE_IN_2_6
-GdkPixbuf *gdk_pixbuf_flip                   (const GdkPixbuf   *src,
-				              gboolean           horizontal);
-				     
+GdkPixbuf* gdk_pixbuf_flip(const GdkPixbuf* src, gboolean horizontal);
+
 G_END_DECLS
 
-
-#endif  /* GDK_PIXBUF_TRANSFORM_H */
+#endif /* GDK_PIXBUF_TRANSFORM_H */

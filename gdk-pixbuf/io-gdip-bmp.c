@@ -24,65 +24,50 @@
 
 #include "io-gdip-utils.h"
 
-static gboolean
-gdk_pixbuf__gdip_image_save_BMP_to_callback (GdkPixbufSaveFunc   save_func,
-                                             gpointer            user_data,
-                                             GdkPixbuf          *pixbuf,
-                                             gchar             **keys,
-                                             gchar             **values,
-                                             GError            **error)
-{
-  return gdip_save_pixbuf (pixbuf, L"image/bmp", NULL, save_func, user_data, error);
+static gboolean gdk_pixbuf__gdip_image_save_BMP_to_callback(GdkPixbufSaveFunc save_func,
+                                                            gpointer user_data,
+                                                            GdkPixbuf* pixbuf,
+                                                            gchar** keys,
+                                                            gchar** values,
+                                                            GError** error) {
+    return gdip_save_pixbuf(pixbuf, L"image/bmp", NULL, save_func, user_data, error);
 }
 
-static gboolean
-gdk_pixbuf__gdip_image_save_BMP (FILE          *f,
-                                 GdkPixbuf     *pixbuf,
-                                 gchar        **keys,
-                                 gchar        **values,
-                                 GError       **error)
-{
-  return gdk_pixbuf__gdip_image_save_BMP_to_callback (gdip_save_to_file_callback, f, pixbuf, keys, values, error);
+static gboolean gdk_pixbuf__gdip_image_save_BMP(FILE* f,
+                                                GdkPixbuf* pixbuf,
+                                                gchar** keys,
+                                                gchar** values,
+                                                GError** error) {
+    return gdk_pixbuf__gdip_image_save_BMP_to_callback(gdip_save_to_file_callback, f, pixbuf, keys, values, error);
 }
 
 #ifndef INCLUDE_gdiplus
 #define MODULE_ENTRY(function) G_MODULE_EXPORT void function
 #else
-#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_bmp_ ## function
+#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_bmp_##function
 #endif
 
-MODULE_ENTRY (fill_vtable) (GdkPixbufModule *module)
-{
-  gdip_fill_vtable (module);
+MODULE_ENTRY(fill_vtable)(GdkPixbufModule* module) {
+    gdip_fill_vtable(module);
 
-  module->save_to_callback = gdk_pixbuf__gdip_image_save_BMP_to_callback;
-  module->save = gdk_pixbuf__gdip_image_save_BMP; /* for gtk < 2.14, you need to implement both. otherwise gdk-pixbuf-queryloaders fails */
+    module->save_to_callback = gdk_pixbuf__gdip_image_save_BMP_to_callback;
+    module->save = gdk_pixbuf__gdip_image_save_BMP; /* for gtk < 2.14, you need to implement both. otherwise
+                                                       gdk-pixbuf-queryloaders fails */
 }
 
-MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
-{
-  static const GdkPixbufModulePattern signature[] = {
-    { "BM", NULL, 100 }, /* BMP */
-    { NULL, NULL, 0 }
-  };
+MODULE_ENTRY(fill_info)(GdkPixbufFormat* info) {
+    static const GdkPixbufModulePattern signature[] = {{"BM", NULL, 100}, /* BMP */
+                                                       {NULL, NULL, 0}};
 
-  static const gchar *mime_types[] = {
-    "image/bmp",
-    "image/x-bmp",
-    "image/x-MS-bmp",
-    NULL
-  };
+    static const gchar* mime_types[] = {"image/bmp", "image/x-bmp", "image/x-MS-bmp", NULL};
 
-  static const gchar *extensions[] = {
-    "bmp",
-    NULL
-  };
+    static const gchar* extensions[] = {"bmp", NULL};
 
-  info->name        = "bmp";
-  info->signature   = (GdkPixbufModulePattern *) signature;
-  info->description = NC_("image format", "BMP");
-  info->mime_types  = (gchar **) mime_types;
-  info->extensions  = (gchar **) extensions;
-  info->flags       = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
-  info->license     = "LGPL";
+    info->name = "bmp";
+    info->signature = (GdkPixbufModulePattern*)signature;
+    info->description = NC_("image format", "BMP");
+    info->mime_types = (gchar**)mime_types;
+    info->extensions = (gchar**)extensions;
+    info->flags = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
+    info->license = "LGPL";
 }

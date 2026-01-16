@@ -22,86 +22,74 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static gboolean
-load_and_save (const char *filename, GError **error)
-{
-  GdkPixbuf *pixbuf = NULL;
-  GdkPixbufLoader *loader;
-  guchar *contents;
-  char *new_filename = NULL;
-  gsize size;
-  gboolean ret = TRUE;
+static gboolean load_and_save(const char* filename, GError** error) {
+    GdkPixbuf* pixbuf = NULL;
+    GdkPixbufLoader* loader;
+    guchar* contents;
+    char* new_filename = NULL;
+    gsize size;
+    gboolean ret = TRUE;
 
-  if (!g_file_get_contents (filename, (char **) &contents, &size, error))
-    return FALSE;
+    if (!g_file_get_contents(filename, (char**)&contents, &size, error))
+        return FALSE;
 
-  loader = gdk_pixbuf_loader_new ();
-  if (!gdk_pixbuf_loader_write (loader, contents, size, error))
-    {
-      ret = FALSE;
-      goto out;
+    loader = gdk_pixbuf_loader_new();
+    if (!gdk_pixbuf_loader_write(loader, contents, size, error)) {
+        ret = FALSE;
+        goto out;
     }
 
-  if (!gdk_pixbuf_loader_close (loader, error))
-    {
-      if (!g_error_matches (*error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INCOMPLETE_ANIMATION))
-        {
-          ret = FALSE;
-          goto out;
+    if (!gdk_pixbuf_loader_close(loader, error)) {
+        if (!g_error_matches(*error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_INCOMPLETE_ANIMATION)) {
+            ret = FALSE;
+            goto out;
         }
-      g_clear_error (error);
+        g_clear_error(error);
     }
 
-  pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-  g_assert (pixbuf);
-  g_object_ref (pixbuf);
+    pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+    g_assert(pixbuf);
+    g_object_ref(pixbuf);
 
-  g_object_unref (loader);
+    g_object_unref(loader);
 
-  new_filename = g_strdup_printf ("%s.ref.png", filename);
-  ret = gdk_pixbuf_save (pixbuf, new_filename, "png", error, NULL);
+    new_filename = g_strdup_printf("%s.ref.png", filename);
+    ret = gdk_pixbuf_save(pixbuf, new_filename, "png", error, NULL);
 
 out:
-  g_free (contents);
-  g_free (new_filename);
-  g_clear_object (&pixbuf);
+    g_free(contents);
+    g_free(new_filename);
+    g_clear_object(&pixbuf);
 
-  return ret;
+    return ret;
 }
 
-static void
-usage (void)
-{
-  g_print ("usage: pixbuf-save-ref <files>\n");
-  exit (EXIT_FAILURE);
+static void usage(void) {
+    g_print("usage: pixbuf-save-ref <files>\n");
+    exit(EXIT_FAILURE);
 }
 
-int
-main (int argc, char **argv)
-{
-  int i;
+int main(int argc, char** argv) {
+    int i;
 
-  g_log_set_always_fatal (G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+    g_log_set_always_fatal(G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
-  if (argc == 1)
-    usage();
+    if (argc == 1)
+        usage();
 
-  for (i = 1; i < argc; ++i)
-    {
-      GError *err = NULL;
+    for (i = 1; i < argc; ++i) {
+        GError* err = NULL;
 
-      g_print ("%s\t\t", argv[i]);
-      fflush (stdout);
-      if (!load_and_save (argv[i], &err))
-        {
-          fprintf (stderr, "%s: error: %s\n", argv[i], err->message);
-          g_clear_error (&err);
+        g_print("%s\t\t", argv[i]);
+        fflush(stdout);
+        if (!load_and_save(argv[i], &err)) {
+            fprintf(stderr, "%s: error: %s\n", argv[i], err->message);
+            g_clear_error(&err);
         }
-      else
-        {
-          g_print ("success\n");
+        else {
+            g_print("success\n");
         }
     }
 
-  return 0;
+    return 0;
 }

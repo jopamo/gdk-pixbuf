@@ -20,7 +20,7 @@
 #define GDK_PIXBUF_AUTOCLEANUPS_H
 
 /* We need all the types, so don't try to include this directly */
-#if defined(GDK_PIXBUF_DISABLE_SINGLE_INCLUDES) && !defined (GDK_PIXBUF_H_INSIDE) && !defined (GDK_PIXBUF_COMPILATION)
+#if defined(GDK_PIXBUF_DISABLE_SINGLE_INCLUDES) && !defined(GDK_PIXBUF_H_INSIDE) && !defined(GDK_PIXBUF_COMPILATION)
 #error "Only <gdk-pixbuf/gdk-pixbuf.h> can be included directly."
 #endif
 

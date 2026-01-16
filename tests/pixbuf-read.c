@@ -22,64 +22,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static gboolean
-test_loader (const guchar *bytes, gsize len, GError **err)
-{
-  GdkPixbufLoader *loader;
+static gboolean test_loader(const guchar* bytes, gsize len, GError** err) {
+    GdkPixbufLoader* loader;
 
-  loader = gdk_pixbuf_loader_new ();
-  gdk_pixbuf_loader_write (loader, bytes, len, err);
-  if (*err)
-      return FALSE;
-  
-  gdk_pixbuf_loader_close (loader, err);
-  if (*err)
-    return FALSE;
+    loader = gdk_pixbuf_loader_new();
+    gdk_pixbuf_loader_write(loader, bytes, len, err);
+    if (*err)
+        return FALSE;
 
-  return TRUE;
+    gdk_pixbuf_loader_close(loader, err);
+    if (*err)
+        return FALSE;
+
+    return TRUE;
 }
 
-static void
-usage (void)
-{
-  g_print ("usage: pixbuf-read <files>\n");
-  exit (EXIT_FAILURE);
+static void usage(void) {
+    g_print("usage: pixbuf-read <files>\n");
+    exit(EXIT_FAILURE);
 }
-  
-int
-main (int argc, char **argv)
-{
-  int i;
 
-  g_log_set_always_fatal (G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+int main(int argc, char** argv) {
+    int i;
 
-  if (argc == 1)
-    usage();
-  
-  for (i = 1; i < argc; ++i)
-    {
-      gchar *contents;
-      gsize size;
-      GError *err = NULL;
-      
-      g_print ("%s\t\t", argv[i]);
-      fflush (stdout);
-      if (!g_file_get_contents (argv[i], &contents, &size, &err))
-	{
-	  fprintf (stderr, "%s: error: %s\n", argv[i], err->message);
-	}
-      else
-	{
-	  err = NULL;
+    g_log_set_always_fatal(G_LOG_LEVEL_WARNING | G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
-	  if (test_loader ((guchar *) contents, size, &err))
-	    g_print ("success\n");
-	  else
-	    g_print ("error: %s\n", err->message);
+    if (argc == 1)
+        usage();
 
-	  g_free (contents);
-	}
+    for (i = 1; i < argc; ++i) {
+        gchar* contents;
+        gsize size;
+        GError* err = NULL;
+
+        g_print("%s\t\t", argv[i]);
+        fflush(stdout);
+        if (!g_file_get_contents(argv[i], &contents, &size, &err)) {
+            fprintf(stderr, "%s: error: %s\n", argv[i], err->message);
+        }
+        else {
+            err = NULL;
+
+            if (test_loader((guchar*)contents, size, &err))
+                g_print("success\n");
+            else
+                g_print("error: %s\n", err->message);
+
+            g_free(contents);
+        }
     }
-  
-  return 0;
+
+    return 0;
 }

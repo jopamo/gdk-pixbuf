@@ -43,4 +43,4 @@
 
 #undef GDK_PIXBUF_H_INSIDE
 
-#endif  /* GDK_PIXBUF_H */
+#endif /* GDK_PIXBUF_H */

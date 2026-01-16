@@ -26,24 +26,17 @@
 
 #include "io-gdip-native.h"
 
-gboolean
-gdip_save_to_file_callback (const gchar *buf,
-                            gsize        count,
-                            GError     **error,
-                            gpointer     data);
+gboolean gdip_save_to_file_callback(const gchar* buf, gsize count, GError** error, gpointer data);
 
-void
-gdip_fill_vtable (GdkPixbufModule *module);
+void gdip_fill_vtable(GdkPixbufModule* module);
 
-void
-gdip_fill_vector_vtable (GdkPixbufModule *module);
+void gdip_fill_vector_vtable(GdkPixbufModule* module);
 
-gboolean
-gdip_save_pixbuf (GdkPixbuf *pixbuf,
-                  const WCHAR *format,
-                  const EncoderParameters *encoder_params,
-                  GdkPixbufSaveFunc save_func,
-                  gpointer user_data,
-                  GError **error);
+gboolean gdip_save_pixbuf(GdkPixbuf* pixbuf,
+                          const WCHAR* format,
+                          const EncoderParameters* encoder_params,
+                          GdkPixbufSaveFunc save_func,
+                          gpointer user_data,
+                          GError** error);
 
 #endif

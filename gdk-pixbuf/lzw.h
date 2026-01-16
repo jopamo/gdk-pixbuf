@@ -22,18 +22,14 @@
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE (LZWDecoder, lzw_decoder, LZW, DECODER, GObject)
+G_DECLARE_FINAL_TYPE(LZWDecoder, lzw_decoder, LZW, DECODER, GObject)
 
 /* Maximum code size in bits */
 #define LZW_CODE_MAX 12
 
-LZWDecoder *lzw_decoder_new  (guint8     code_size);
+LZWDecoder* lzw_decoder_new(guint8 code_size);
 
-gsize       lzw_decoder_feed (LZWDecoder *decoder,
-                              guint8     *input,
-                              gsize       input_length,
-                              guint8     *output,
-                              gsize       output_length);
+gsize lzw_decoder_feed(LZWDecoder* decoder, guint8* input, gsize input_length, guint8* output, gsize output_length);
 
 G_END_DECLS
 

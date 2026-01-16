@@ -23,21 +23,20 @@
 
 #include <string.h>
 
-struct _GdkPixbufBufferQueue
-{
-  GSList *	first_buffer;		/* pointer to first buffer */
-  GSList *	last_buffer;		/* pointer to last buffer (for fast appending) */
-  gsize		size;			/* amount of bytes in the queue */
-  gsize		offset;			/* amount of data already flushed out of the queue */
-  
-  int		ref_count;
+struct _GdkPixbufBufferQueue {
+    GSList* first_buffer; /* pointer to first buffer */
+    GSList* last_buffer;  /* pointer to last buffer (for fast appending) */
+    gsize size;           /* amount of bytes in the queue */
+    gsize offset;         /* amount of data already flushed out of the queue */
+
+    int ref_count;
 };
 
 /**
  * GdkPixbufBufferQueue:
  *
  * A #GdkPixbufBufferQueue is a queue of continuous buffers that allows reading
- * its data in chunks of pre-defined sizes. It is used to transform a data 
+ * its data in chunks of pre-defined sizes. It is used to transform a data
  * stream that was provided by buffers of random sizes to buffers of the right
  * size.
  */
@@ -49,15 +48,13 @@ struct _GdkPixbufBufferQueue
  *
  * Returns: a new buffer queue. Use gdk_pixbuf_buffer_queue_unref () to free it.
  **/
-GdkPixbufBufferQueue *
-gdk_pixbuf_buffer_queue_new (void)
-{
-  GdkPixbufBufferQueue *buffer_queue;
+GdkPixbufBufferQueue* gdk_pixbuf_buffer_queue_new(void) {
+    GdkPixbufBufferQueue* buffer_queue;
 
-  buffer_queue = g_new0 (GdkPixbufBufferQueue, 1);
-  buffer_queue->ref_count = 1;
+    buffer_queue = g_new0(GdkPixbufBufferQueue, 1);
+    buffer_queue->ref_count = 1;
 
-  return buffer_queue;
+    return buffer_queue;
 }
 
 /**
@@ -68,12 +65,10 @@ gdk_pixbuf_buffer_queue_new (void)
  *
  * Returns: amount of bytes in @queue.
  **/
-gsize
-gdk_pixbuf_buffer_queue_get_size (GdkPixbufBufferQueue *queue)
-{
-  g_return_val_if_fail (queue != NULL, 0);
+gsize gdk_pixbuf_buffer_queue_get_size(GdkPixbufBufferQueue* queue) {
+    g_return_val_if_fail(queue != NULL, 0);
 
-  return queue->size;
+    return queue->size;
 }
 
 /**
@@ -85,12 +80,10 @@ gdk_pixbuf_buffer_queue_get_size (GdkPixbufBufferQueue *queue)
  *
  * Returns: Number of bytes that were already pulled from this queue.
  **/
-gsize
-gdk_pixbuf_buffer_queue_get_offset (GdkPixbufBufferQueue * queue)
-{
-  g_return_val_if_fail (queue != NULL, 0);
+gsize gdk_pixbuf_buffer_queue_get_offset(GdkPixbufBufferQueue* queue) {
+    g_return_val_if_fail(queue != NULL, 0);
 
-  return queue->offset;
+    return queue->offset;
 }
 
 /**
@@ -100,59 +93,50 @@ gdk_pixbuf_buffer_queue_get_offset (GdkPixbufBufferQueue * queue)
  *
  * Removes the first @n_bytes bytes from the queue.
  */
-void
-gdk_pixbuf_buffer_queue_flush (GdkPixbufBufferQueue *queue, gsize n_bytes)
-{
-  g_return_if_fail (queue != NULL);
-  g_return_if_fail (n_bytes <= queue->size);
+void gdk_pixbuf_buffer_queue_flush(GdkPixbufBufferQueue* queue, gsize n_bytes) {
+    g_return_if_fail(queue != NULL);
+    g_return_if_fail(n_bytes <= queue->size);
 
-  queue->size -= n_bytes;
-  queue->offset += n_bytes;
+    queue->size -= n_bytes;
+    queue->offset += n_bytes;
 
-  while (n_bytes > 0)
-    {
-      GBytes *bytes;
-      gsize size;
-      
-      bytes = queue->first_buffer->data;
-      size = g_bytes_get_size (bytes);
+    while (n_bytes > 0) {
+        GBytes* bytes;
+        gsize size;
 
-      if (size <= n_bytes)
-        {
-          n_bytes -= size;
-          queue->first_buffer = g_slist_remove (queue->first_buffer, bytes);
+        bytes = queue->first_buffer->data;
+        size = g_bytes_get_size(bytes);
+
+        if (size <= n_bytes) {
+            n_bytes -= size;
+            queue->first_buffer = g_slist_remove(queue->first_buffer, bytes);
         }
-      else
-        {
-          queue->first_buffer->data = g_bytes_new_from_bytes (bytes,
-	                                                      n_bytes,
-                                                              size - n_bytes);
-          n_bytes = 0;
+        else {
+            queue->first_buffer->data = g_bytes_new_from_bytes(bytes, n_bytes, size - n_bytes);
+            n_bytes = 0;
         }
-      g_bytes_unref (bytes);
+        g_bytes_unref(bytes);
     }
 
-  if (queue->first_buffer == NULL)
-    queue->last_buffer = NULL;
+    if (queue->first_buffer == NULL)
+        queue->last_buffer = NULL;
 }
 
 /**
  * gdk_pixbuf_buffer_queue_clear:
  * @queue: a #GdkPixbufBufferQueue
  *
- * Resets @queue into to initial state. All buffers it contains will be 
+ * Resets @queue into to initial state. All buffers it contains will be
  * released and the offset will be reset to 0.
  **/
-void
-gdk_pixbuf_buffer_queue_clear (GdkPixbufBufferQueue *queue)
-{
-  g_return_if_fail (queue != NULL);
+void gdk_pixbuf_buffer_queue_clear(GdkPixbufBufferQueue* queue) {
+    g_return_if_fail(queue != NULL);
 
-  g_slist_free_full (queue->first_buffer, (GDestroyNotify) g_bytes_unref);
-  queue->first_buffer = NULL;
-  queue->last_buffer = NULL;
-  queue->size = 0;
-  queue->offset = 0;
+    g_slist_free_full(queue->first_buffer, (GDestroyNotify)g_bytes_unref);
+    queue->first_buffer = NULL;
+    queue->last_buffer = NULL;
+    queue->size = 0;
+    queue->offset = 0;
 }
 
 /**
@@ -164,29 +148,25 @@ gdk_pixbuf_buffer_queue_clear (GdkPixbufBufferQueue *queue)
  * will take ownership of the given @buffer. Use g_bytes_ref () before
  * calling this function to keep a reference.
  **/
-void
-gdk_pixbuf_buffer_queue_push (GdkPixbufBufferQueue *queue,
-                              GBytes               *bytes)
-{
-  gsize size;
+void gdk_pixbuf_buffer_queue_push(GdkPixbufBufferQueue* queue, GBytes* bytes) {
+    gsize size;
 
-  g_return_if_fail (queue != NULL);
-  g_return_if_fail (bytes != NULL);
+    g_return_if_fail(queue != NULL);
+    g_return_if_fail(bytes != NULL);
 
-  size = g_bytes_get_size (bytes);
-  if (size == 0)
-    {
-      g_bytes_unref (bytes);
-      return;
+    size = g_bytes_get_size(bytes);
+    if (size == 0) {
+        g_bytes_unref(bytes);
+        return;
     }
 
-  queue->last_buffer = g_slist_append (queue->last_buffer, bytes);
-  if (queue->first_buffer == NULL)
-    queue->first_buffer = queue->last_buffer;
-  else
-    queue->last_buffer = queue->last_buffer->next;
+    queue->last_buffer = g_slist_append(queue->last_buffer, bytes);
+    if (queue->first_buffer == NULL)
+        queue->first_buffer = queue->last_buffer;
+    else
+        queue->last_buffer = queue->last_buffer->next;
 
-  queue->size += size;
+    queue->size += size;
 }
 
 /**
@@ -194,57 +174,50 @@ gdk_pixbuf_buffer_queue_push (GdkPixbufBufferQueue *queue,
  * @queue: a #GdkPixbufBufferQueue to read from
  * @length: amount of bytes to peek
  *
- * Creates a new buffer with the first @length bytes from @queue, but unlike 
+ * Creates a new buffer with the first @length bytes from @queue, but unlike
  * gdk_pixbuf_buffer_queue_pull(), does not remove them from @queue.
  *
- * Returns: NULL if the requested amount of data wasn't available or a new 
+ * Returns: NULL if the requested amount of data wasn't available or a new
  *          #GBytes. Use g_bytes_unref() after use.
  **/
-GBytes *
-gdk_pixbuf_buffer_queue_peek (GdkPixbufBufferQueue *queue,
-                              gsize                 length)
-{
-  GSList *g;
-  GBytes *result, *bytes;
+GBytes* gdk_pixbuf_buffer_queue_peek(GdkPixbufBufferQueue* queue, gsize length) {
+    GSList* g;
+    GBytes *result, *bytes;
 
-  g_return_val_if_fail (queue != NULL, NULL);
+    g_return_val_if_fail(queue != NULL, NULL);
 
-  if (queue->size < length)
-    return NULL;
+    if (queue->size < length)
+        return NULL;
 
-  /* need to special case here, because the queue may be empty */
-  if (length == 0)
-    return g_bytes_new (NULL, 0);
+    /* need to special case here, because the queue may be empty */
+    if (length == 0)
+        return g_bytes_new(NULL, 0);
 
-  g = queue->first_buffer;
-  bytes = g->data;
-  if (g_bytes_get_size (bytes) == length)
-    {
-      result = g_bytes_ref (bytes);
+    g = queue->first_buffer;
+    bytes = g->data;
+    if (g_bytes_get_size(bytes) == length) {
+        result = g_bytes_ref(bytes);
     }
-  else if (g_bytes_get_size (bytes) > length)
-    {
-      result = g_bytes_new_from_bytes (bytes, 0, length);
+    else if (g_bytes_get_size(bytes) > length) {
+        result = g_bytes_new_from_bytes(bytes, 0, length);
     }
-  else
-    {
-      guchar *data;
-      gsize amount, offset;
+    else {
+        guchar* data;
+        gsize amount, offset;
 
-      data = g_malloc (length);
-      
-      for (offset = 0; offset < length; offset += amount)
-        {
-          bytes = g->data;
-          amount = MIN (length - offset, g_bytes_get_size (bytes));
-          memcpy (data + offset, g_bytes_get_data (bytes, NULL), amount);
-          g = g->next;
+        data = g_malloc(length);
+
+        for (offset = 0; offset < length; offset += amount) {
+            bytes = g->data;
+            amount = MIN(length - offset, g_bytes_get_size(bytes));
+            memcpy(data + offset, g_bytes_get_data(bytes, NULL), amount);
+            g = g->next;
         }
 
-      result = g_bytes_new_take (data, length);
+        result = g_bytes_new_take(data, length);
     }
 
-  return result;
+    return result;
 }
 
 /**
@@ -252,77 +225,71 @@ gdk_pixbuf_buffer_queue_peek (GdkPixbufBufferQueue *queue,
  * @queue: a #GdkPixbufBufferQueue
  * @length: amount of bytes to pull
  *
- * If enough data is still available in @queue, the first @length bytes are 
+ * If enough data is still available in @queue, the first @length bytes are
  * put into a new buffer and that buffer is returned. The @length bytes are
  * removed from the head of the queue. If not enough data is available, %NULL
  * is returned.
  *
  * Returns: a new #GBytes or %NULL
  **/
-GBytes *
-gdk_pixbuf_buffer_queue_pull (GdkPixbufBufferQueue * queue, gsize length)
-{
-  GBytes *result;
+GBytes* gdk_pixbuf_buffer_queue_pull(GdkPixbufBufferQueue* queue, gsize length) {
+    GBytes* result;
 
-  g_return_val_if_fail (queue != NULL, NULL);
+    g_return_val_if_fail(queue != NULL, NULL);
 
-  result = gdk_pixbuf_buffer_queue_peek (queue, length);
-  if (result == NULL)
-    return NULL;
+    result = gdk_pixbuf_buffer_queue_peek(queue, length);
+    if (result == NULL)
+        return NULL;
 
-  gdk_pixbuf_buffer_queue_flush (queue, length);
+    gdk_pixbuf_buffer_queue_flush(queue, length);
 
-  return result;
+    return result;
 }
 
 /**
  * gdk_pixbuf_buffer_queue_peek_buffer:
  * @queue: a #GdkPixbufBufferQueue
  *
- * Gets the first buffer out of @queue and returns it. This function is 
+ * Gets the first buffer out of @queue and returns it. This function is
  * equivalent to calling gdk_pixbuf_buffer_queue_peek() with the size of the
  * first buffer in it.
  *
- * Returns: The first buffer in @queue or %NULL if @queue is empty. Use 
+ * Returns: The first buffer in @queue or %NULL if @queue is empty. Use
  *          g_bytes_unref() after use.
  **/
-GBytes *
-gdk_pixbuf_buffer_queue_peek_buffer (GdkPixbufBufferQueue * queue)
-{
-  GBytes *bytes;
+GBytes* gdk_pixbuf_buffer_queue_peek_buffer(GdkPixbufBufferQueue* queue) {
+    GBytes* bytes;
 
-  g_return_val_if_fail (queue != NULL, NULL);
+    g_return_val_if_fail(queue != NULL, NULL);
 
-  if (queue->first_buffer == NULL)
-    return NULL;
+    if (queue->first_buffer == NULL)
+        return NULL;
 
-  bytes = queue->first_buffer->data;
+    bytes = queue->first_buffer->data;
 
-  return g_bytes_ref (bytes);
+    return g_bytes_ref(bytes);
 }
 
 /**
  * gdk_pixbuf_buffer_queue_pull_buffer:
  * @queue: a #GdkPixbufBufferQueue
  *
- * Pulls the first buffer out of @queue and returns it. This function is 
+ * Pulls the first buffer out of @queue and returns it. This function is
  * equivalent to calling gdk_pixbuf_buffer_queue_pull() with the size of the
  * first buffer in it.
  *
  * Returns: The first buffer in @queue or %NULL if @queue is empty.
  **/
-GBytes *
-gdk_pixbuf_buffer_queue_pull_buffer (GdkPixbufBufferQueue *queue)
-{
-  GBytes *bytes;
+GBytes* gdk_pixbuf_buffer_queue_pull_buffer(GdkPixbufBufferQueue* queue) {
+    GBytes* bytes;
 
-  g_return_val_if_fail (queue != NULL, NULL);
+    g_return_val_if_fail(queue != NULL, NULL);
 
-  bytes = gdk_pixbuf_buffer_queue_peek_buffer (queue);
-  if (bytes)
-    gdk_pixbuf_buffer_queue_flush (queue, g_bytes_get_size (bytes));
+    bytes = gdk_pixbuf_buffer_queue_peek_buffer(queue);
+    if (bytes)
+        gdk_pixbuf_buffer_queue_flush(queue, g_bytes_get_size(bytes));
 
-  return bytes;
+    return bytes;
 }
 
 /**
@@ -333,35 +300,30 @@ gdk_pixbuf_buffer_queue_pull_buffer (GdkPixbufBufferQueue *queue)
  *
  * Returns: The passed in @queue.
  **/
-GdkPixbufBufferQueue *
-gdk_pixbuf_buffer_queue_ref (GdkPixbufBufferQueue * queue)
-{
-  g_return_val_if_fail (queue != NULL, NULL);
-  g_return_val_if_fail (queue->ref_count > 0, NULL);
+GdkPixbufBufferQueue* gdk_pixbuf_buffer_queue_ref(GdkPixbufBufferQueue* queue) {
+    g_return_val_if_fail(queue != NULL, NULL);
+    g_return_val_if_fail(queue->ref_count > 0, NULL);
 
-  queue->ref_count++;
-  return queue;
+    queue->ref_count++;
+    return queue;
 }
 
 /**
  * gdk_pixbuf_buffer_queue_unref:
  * @queue: a #GdkPixbufBufferQueue
  *
- * Decreases the reference count of @queue by one. If no reference 
- * to this buffer exists anymore, the buffer and the memory 
+ * Decreases the reference count of @queue by one. If no reference
+ * to this buffer exists anymore, the buffer and the memory
  * it manages are freed.
  **/
-void
-gdk_pixbuf_buffer_queue_unref (GdkPixbufBufferQueue * queue)
-{
-  g_return_if_fail (queue != NULL);
-  g_return_if_fail (queue->ref_count > 0);
+void gdk_pixbuf_buffer_queue_unref(GdkPixbufBufferQueue* queue) {
+    g_return_if_fail(queue != NULL);
+    g_return_if_fail(queue->ref_count > 0);
 
-  queue->ref_count--;
-  if (queue->ref_count > 0)
-    return;
+    queue->ref_count--;
+    if (queue->ref_count > 0)
+        return;
 
-  gdk_pixbuf_buffer_queue_clear (queue);
-  g_free (queue);
+    gdk_pixbuf_buffer_queue_clear(queue);
+    g_free(queue);
 }
-

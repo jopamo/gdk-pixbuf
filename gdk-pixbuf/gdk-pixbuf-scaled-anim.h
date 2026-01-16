@@ -26,20 +26,20 @@
 
 G_BEGIN_DECLS
 
-#define GDK_TYPE_PIXBUF_SCALED_ANIM              (gdk_pixbuf_scaled_anim_get_type ())
-#define GDK_TYPE_PIXBUF_SCALED_ANIM_ITER         (gdk_pixbuf_scaled_anim_iter_get_type ())
+#define GDK_TYPE_PIXBUF_SCALED_ANIM (gdk_pixbuf_scaled_anim_get_type())
+#define GDK_TYPE_PIXBUF_SCALED_ANIM_ITER (gdk_pixbuf_scaled_anim_iter_get_type())
 
 typedef struct _GdkPixbufScaledAnim GdkPixbufScaledAnim;
 typedef struct _GdkPixbufScaledAnimClass GdkPixbufScaledAnimClass;
 
-GType gdk_pixbuf_scaled_anim_get_type (void) G_GNUC_CONST;
-GType gdk_pixbuf_scaled_anim_iter_get_type (void) G_GNUC_CONST;
+GType gdk_pixbuf_scaled_anim_get_type(void) G_GNUC_CONST;
+GType gdk_pixbuf_scaled_anim_iter_get_type(void) G_GNUC_CONST;
 
-GdkPixbufScaledAnim *_gdk_pixbuf_scaled_anim_new (GdkPixbufAnimation *anim,
-                                                  gdouble             xscale, 
-                                                  gdouble             yscale,
-                                                  gdouble             tscale);
+GdkPixbufScaledAnim* _gdk_pixbuf_scaled_anim_new(GdkPixbufAnimation* anim,
+                                                 gdouble xscale,
+                                                 gdouble yscale,
+                                                 gdouble tscale);
 
 G_END_DECLS
 
-#endif  /* GDK_PIXBUF_SCALED_ANIM_H */
+#endif /* GDK_PIXBUF_SCALED_ANIM_H */

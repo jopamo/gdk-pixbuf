@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
 /**
  * gdk_pixbuf_new_from_data:
  * @data: (array): Image data in 8-bit/sample packed format
@@ -38,7 +36,7 @@
  * @destroy_fn: (scope async) (allow-none): Function used to free the data when the pixbuf's reference count
  * drops to zero, or %NULL if the data should not be freed
  * @destroy_fn_data: (closure): Closure data to pass to the destroy notification function
- * 
+ *
  * Creates a new #GdkPixbuf out of in-memory image data.
  *
  * Currently only RGB images with 8 bits per sample are supported.
@@ -53,42 +51,33 @@
  *
  * Return value: (transfer full): A newly-created pixbuf
  **/
-GdkPixbuf *
-gdk_pixbuf_new_from_data (const guchar           *data,
-                          GdkColorspace           colorspace,
-                          gboolean                has_alpha,
-			  int                     bits_per_sample,
-                          int                     width,
-                          int                     height,
-                          int                     rowstride,
-	                  GdkPixbufDestroyNotify  destroy_fn,
-                          gpointer                destroy_fn_data)
-{
-	GdkPixbuf *pixbuf;
+GdkPixbuf* gdk_pixbuf_new_from_data(const guchar* data,
+                                    GdkColorspace colorspace,
+                                    gboolean has_alpha,
+                                    int bits_per_sample,
+                                    int width,
+                                    int height,
+                                    int rowstride,
+                                    GdkPixbufDestroyNotify destroy_fn,
+                                    gpointer destroy_fn_data) {
+    GdkPixbuf* pixbuf;
 
-	/* Only 8-bit/sample RGB buffers are supported for now */
+    /* Only 8-bit/sample RGB buffers are supported for now */
 
-	g_return_val_if_fail (data != NULL, NULL);
-	g_return_val_if_fail (colorspace == GDK_COLORSPACE_RGB, NULL);
-	g_return_val_if_fail (bits_per_sample == 8, NULL);
-	g_return_val_if_fail (width > 0, NULL);
-	g_return_val_if_fail (height > 0, NULL);
+    g_return_val_if_fail(data != NULL, NULL);
+    g_return_val_if_fail(colorspace == GDK_COLORSPACE_RGB, NULL);
+    g_return_val_if_fail(bits_per_sample == 8, NULL);
+    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(height > 0, NULL);
 
-	pixbuf = g_object_new (GDK_TYPE_PIXBUF, 
-			       "colorspace", colorspace,
-			       "n-channels", has_alpha ? 4 : 3,
-			       "bits-per-sample", bits_per_sample,
-			       "has-alpha", has_alpha ? TRUE : FALSE,
-			       "width", width,
-			       "height", height,
-			       "rowstride", rowstride,
-			       "pixels", data,
-			       NULL);
-	g_assert (pixbuf->storage == STORAGE_PIXELS);
-	pixbuf->s.pixels.destroy_fn = destroy_fn;
-	pixbuf->s.pixels.destroy_fn_data = destroy_fn_data;
+    pixbuf = g_object_new(GDK_TYPE_PIXBUF, "colorspace", colorspace, "n-channels", has_alpha ? 4 : 3, "bits-per-sample",
+                          bits_per_sample, "has-alpha", has_alpha ? TRUE : FALSE, "width", width, "height", height,
+                          "rowstride", rowstride, "pixels", data, NULL);
+    g_assert(pixbuf->storage == STORAGE_PIXELS);
+    pixbuf->s.pixels.destroy_fn = destroy_fn;
+    pixbuf->s.pixels.destroy_fn_data = destroy_fn_data;
 
-	return pixbuf;
+    return pixbuf;
 }
 
 /**
@@ -100,7 +89,7 @@ gdk_pixbuf_new_from_data (const guchar           *data,
  * @width: Width of the image in pixels, must be > 0
  * @height: Height of the image in pixels, must be > 0
  * @rowstride: Distance in bytes between row starts
- * 
+ *
  * Creates a new #GdkPixbuf out of in-memory readonly image data.
  *
  * Currently only RGB images with 8 bits per sample are supported.
@@ -112,30 +101,21 @@ gdk_pixbuf_new_from_data (const guchar           *data,
  *
  * Since: 2.32
  **/
-GdkPixbuf *
-gdk_pixbuf_new_from_bytes (GBytes        *data,
-                           GdkColorspace  colorspace,
-                           gboolean       has_alpha,
-			   int            bits_per_sample,
-                           int            width,
-                           int            height,
-                           int            rowstride)
-{
-	g_return_val_if_fail (data != NULL, NULL);
-	g_return_val_if_fail (colorspace == GDK_COLORSPACE_RGB, NULL);
-	g_return_val_if_fail (bits_per_sample == 8, NULL);
-	g_return_val_if_fail (width > 0, NULL);
-	g_return_val_if_fail (height > 0, NULL);
-	g_return_val_if_fail (g_bytes_get_size (data) >= width * height * (has_alpha ? 4 : 3), NULL);
+GdkPixbuf* gdk_pixbuf_new_from_bytes(GBytes* data,
+                                     GdkColorspace colorspace,
+                                     gboolean has_alpha,
+                                     int bits_per_sample,
+                                     int width,
+                                     int height,
+                                     int rowstride) {
+    g_return_val_if_fail(data != NULL, NULL);
+    g_return_val_if_fail(colorspace == GDK_COLORSPACE_RGB, NULL);
+    g_return_val_if_fail(bits_per_sample == 8, NULL);
+    g_return_val_if_fail(width > 0, NULL);
+    g_return_val_if_fail(height > 0, NULL);
+    g_return_val_if_fail(g_bytes_get_size(data) >= width * height * (has_alpha ? 4 : 3), NULL);
 
-	return g_object_new (GDK_TYPE_PIXBUF,
-                             "pixel-bytes", data,
-                             "colorspace", colorspace,
-                             "n-channels", has_alpha ? 4 : 3,
-                             "bits-per-sample", bits_per_sample,
-                             "has-alpha", has_alpha ? TRUE : FALSE,
-                             "width", width,
-                             "height", height,
-                             "rowstride", rowstride,
-                             NULL);
+    return g_object_new(GDK_TYPE_PIXBUF, "pixel-bytes", data, "colorspace", colorspace, "n-channels", has_alpha ? 4 : 3,
+                        "bits-per-sample", bits_per_sample, "has-alpha", has_alpha ? TRUE : FALSE, "width", width,
+                        "height", height, "rowstride", rowstride, NULL);
 }

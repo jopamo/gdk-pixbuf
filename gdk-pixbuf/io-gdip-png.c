@@ -22,126 +22,108 @@
 #define INITGUID
 #include "io-gdip-utils.h"
 
-DEFINE_GUID(EncoderCompression, 0xe09d739d,0xccd4,0x44ee,0x8e,0xba,0x3f,0xbf,0x8b,0xe4,0xfc,0x58);
+DEFINE_GUID(EncoderCompression, 0xe09d739d, 0xccd4, 0x44ee, 0x8e, 0xba, 0x3f, 0xbf, 0x8b, 0xe4, 0xfc, 0x58);
 
-static gboolean
-gdk_pixbuf__gdip_image_save_PNG_to_callback (GdkPixbufSaveFunc   save_func,
-                                             gpointer            user_data,
-                                             GdkPixbuf          *pixbuf,
-                                             gchar             **keys,
-                                             gchar             **values,
-                                             GError            **error)
-{
-  EncoderParameters encoder_params;
-  LONG compression = 5;
+static gboolean gdk_pixbuf__gdip_image_save_PNG_to_callback(GdkPixbufSaveFunc save_func,
+                                                            gpointer user_data,
+                                                            GdkPixbuf* pixbuf,
+                                                            gchar** keys,
+                                                            gchar** values,
+                                                            GError** error) {
+    EncoderParameters encoder_params;
+    LONG compression = 5;
 
-  if (keys && *keys) {
-    gchar **kiter = keys;
-    gchar **viter = values;
-    
-    while (*kiter) {
-      if (strncmp (*kiter, "tEXt::", 6) == 0) {
-        /* TODO: support exif data and the like */
-      }
-      else if (strcmp (*kiter, "compression") == 0) {
-        char *endptr = NULL;
-        compression = strtol (*viter, &endptr, 10);
-        
-        if (endptr == *viter) {
-          g_set_error (error,
-                       GDK_PIXBUF_ERROR,
-                       GDK_PIXBUF_ERROR_BAD_OPTION,
-                       _("PNG compression level must be a value between 0 and 9; value '%s' could not be parsed."),
-                       *viter);
-          return FALSE;
+    if (keys && *keys) {
+        gchar** kiter = keys;
+        gchar** viter = values;
+
+        while (*kiter) {
+            if (strncmp(*kiter, "tEXt::", 6) == 0) {
+                /* TODO: support exif data and the like */
+            }
+            else if (strcmp(*kiter, "compression") == 0) {
+                char* endptr = NULL;
+                compression = strtol(*viter, &endptr, 10);
+
+                if (endptr == *viter) {
+                    g_set_error(
+                        error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_BAD_OPTION,
+                        _("PNG compression level must be a value between 0 and 9; value '%s' could not be parsed."),
+                        *viter);
+                    return FALSE;
+                }
+                if (compression < 0 || compression > 9) {
+                    /* This is a user-visible error;
+                     * lets people skip the range-checking
+                     * in their app.
+                     */
+                    g_set_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_BAD_OPTION,
+                                _("PNG compression level must be a value between 0 and 9; value '%d' is not allowed."),
+                                (int)compression);
+                    return FALSE;
+                }
+            }
+            else {
+                g_warning("Unrecognized parameter (%s) passed to PNG saver.", *kiter);
+            }
+
+            ++kiter;
+            ++viter;
         }
-        if (compression < 0 || compression > 9) {
-          /* This is a user-visible error;
-           * lets people skip the range-checking
-           * in their app.
-           */
-          g_set_error (error,
-                       GDK_PIXBUF_ERROR,
-                       GDK_PIXBUF_ERROR_BAD_OPTION,
-                       _("PNG compression level must be a value between 0 and 9; value '%d' is not allowed."),
-                       (int)compression);
-          return FALSE;
-        }       
-      } else {
-        g_warning ("Unrecognized parameter (%s) passed to PNG saver.", *kiter);
-      }
-      
-      ++kiter;
-      ++viter;
     }
-  }
 
-  encoder_params.Count = 1;
-  encoder_params.Parameter[0].Guid = EncoderCompression;
-  encoder_params.Parameter[0].Type = EncoderParameterValueTypeLong;
-  encoder_params.Parameter[0].NumberOfValues = 1;
-  encoder_params.Parameter[0].Value = &compression;
+    encoder_params.Count = 1;
+    encoder_params.Parameter[0].Guid = EncoderCompression;
+    encoder_params.Parameter[0].Type = EncoderParameterValueTypeLong;
+    encoder_params.Parameter[0].NumberOfValues = 1;
+    encoder_params.Parameter[0].Value = &compression;
 
-  return gdip_save_pixbuf (pixbuf, L"image/png", &encoder_params, save_func, user_data, error);
+    return gdip_save_pixbuf(pixbuf, L"image/png", &encoder_params, save_func, user_data, error);
 }
 
-static gboolean
-gdk_pixbuf__gdip_image_save_PNG (FILE          *f,
-                                 GdkPixbuf     *pixbuf,
-                                 gchar        **keys,
-                                 gchar        **values,
-                                 GError       **error)
-{
-  return gdk_pixbuf__gdip_image_save_PNG_to_callback (gdip_save_to_file_callback, f, pixbuf, keys, values, error);
+static gboolean gdk_pixbuf__gdip_image_save_PNG(FILE* f,
+                                                GdkPixbuf* pixbuf,
+                                                gchar** keys,
+                                                gchar** values,
+                                                GError** error) {
+    return gdk_pixbuf__gdip_image_save_PNG_to_callback(gdip_save_to_file_callback, f, pixbuf, keys, values, error);
 }
 
-static gboolean
-gdk_pixbuf__gdip_is_save_option_supported_PNG (const gchar *option_key)
-{
-  if (g_strcmp0 (option_key, "compression") == 0 ||
-      strncmp (option_key, "tEXt::", 6) == 0)
-    return TRUE;
+static gboolean gdk_pixbuf__gdip_is_save_option_supported_PNG(const gchar* option_key) {
+    if (g_strcmp0(option_key, "compression") == 0 || strncmp(option_key, "tEXt::", 6) == 0)
+        return TRUE;
 
-  return FALSE;
+    return FALSE;
 }
 
 #ifndef INCLUDE_gdip_png
 #define MODULE_ENTRY(function) G_MODULE_EXPORT void function
 #else
-#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_png_ ## function
+#define MODULE_ENTRY(function) void _gdk_pixbuf__gdip_png_##function
 #endif
 
-MODULE_ENTRY (fill_vtable) (GdkPixbufModule *module)
-{
-  gdip_fill_vtable (module);
+MODULE_ENTRY(fill_vtable)(GdkPixbufModule* module) {
+    gdip_fill_vtable(module);
 
-  module->save_to_callback = gdk_pixbuf__gdip_image_save_PNG_to_callback;
-  module->save = gdk_pixbuf__gdip_image_save_PNG; /* for gtk < 2.14, you need to implement both. otherwise gdk-pixbuf-queryloaders fails */
-  module->is_save_option_supported = gdk_pixbuf__gdip_is_save_option_supported_PNG;
+    module->save_to_callback = gdk_pixbuf__gdip_image_save_PNG_to_callback;
+    module->save = gdk_pixbuf__gdip_image_save_PNG; /* for gtk < 2.14, you need to implement both. otherwise
+                                                       gdk-pixbuf-queryloaders fails */
+    module->is_save_option_supported = gdk_pixbuf__gdip_is_save_option_supported_PNG;
 }
 
-MODULE_ENTRY (fill_info) (GdkPixbufFormat *info)
-{
-  static const GdkPixbufModulePattern signature[] = {
-    { "\x89PNG\r\n\x1a\x0a", NULL, 100 }, /* PNG */
-    { NULL, NULL, 0 }
-  };
+MODULE_ENTRY(fill_info)(GdkPixbufFormat* info) {
+    static const GdkPixbufModulePattern signature[] = {{"\x89PNG\r\n\x1a\x0a", NULL, 100}, /* PNG */
+                                                       {NULL, NULL, 0}};
 
-  static const gchar *mime_types[] = {
-    "image/png",
-    NULL
-  };
+    static const gchar* mime_types[] = {"image/png", NULL};
 
-  static const gchar *extensions[] = {
-    "png",
-    NULL
-  };
+    static const gchar* extensions[] = {"png", NULL};
 
-  info->name        = "png";
-  info->signature   = (GdkPixbufModulePattern *) signature;
-  info->description = NC_("image format", "PNG");
-  info->mime_types  = (gchar **) mime_types;
-  info->extensions  = (gchar **) extensions;
-  info->flags       = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
-  info->license     = "LGPL";
+    info->name = "png";
+    info->signature = (GdkPixbufModulePattern*)signature;
+    info->description = NC_("image format", "PNG");
+    info->mime_types = (gchar**)mime_types;
+    info->extensions = (gchar**)extensions;
+    info->flags = GDK_PIXBUF_FORMAT_WRITABLE | GDK_PIXBUF_FORMAT_THREADSAFE;
+    info->license = "LGPL";
 }

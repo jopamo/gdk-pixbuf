@@ -38,101 +38,87 @@
 #define LOAD_BUFFER_SIZE 65536
 #define SNIFF_BUFFER_SIZE 4096
 
-
-
 typedef struct _GdkPixbufClass GdkPixbufClass;
 
-#define GDK_PIXBUF_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GDK_TYPE_PIXBUF, GdkPixbufClass))
-#define GDK_IS_PIXBUF_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GDK_TYPE_PIXBUF))
-#define GDK_PIXBUF_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GDK_TYPE_PIXBUF, GdkPixbufClass))
+#define GDK_PIXBUF_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GDK_TYPE_PIXBUF, GdkPixbufClass))
+#define GDK_IS_PIXBUF_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GDK_TYPE_PIXBUF))
+#define GDK_PIXBUF_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GDK_TYPE_PIXBUF, GdkPixbufClass))
 
 /* Default fill color */
 #define DEFAULT_FILL_COLOR 0x979899ff
 
-typedef enum {
-        STORAGE_UNINITIALIZED,
-        STORAGE_PIXELS,
-        STORAGE_BYTES
-} Storage;
+typedef enum { STORAGE_UNINITIALIZED, STORAGE_PIXELS, STORAGE_BYTES } Storage;
 
 typedef struct {
-        /* The pixel array */
-        guchar *pixels;
+    /* The pixel array */
+    guchar* pixels;
 
-        /* Destroy notification function; it is supposed to free the pixel array */
-        GdkPixbufDestroyNotify destroy_fn;
+    /* Destroy notification function; it is supposed to free the pixel array */
+    GdkPixbufDestroyNotify destroy_fn;
 
-        /* User data for the destroy notification function */
-        gpointer destroy_fn_data;
+    /* User data for the destroy notification function */
+    gpointer destroy_fn_data;
 } Pixels;
 
 typedef struct {
-        GBytes *bytes;
+    GBytes* bytes;
 } Bytes;
 
 /* Private part of the GdkPixbuf structure */
 struct _GdkPixbuf {
-        GObject parent_instance;
+    GObject parent_instance;
 
-	/* Color space */
-	GdkColorspace colorspace;
+    /* Color space */
+    GdkColorspace colorspace;
 
-	/* Number of channels, alpha included */
-	int n_channels;
+    /* Number of channels, alpha included */
+    int n_channels;
 
-	/* Bits per channel */
-	int bits_per_sample;
+    /* Bits per channel */
+    int bits_per_sample;
 
-	/* Size */
-	int width, height;
+    /* Size */
+    int width, height;
 
-	/* Offset between rows */
-	int rowstride;
+    /* Offset between rows */
+    int rowstride;
 
-        Storage storage;
+    Storage storage;
 
-        struct {
-                Pixels pixels;
-                Bytes bytes;
-        } s;
+    struct {
+        Pixels pixels;
+        Bytes bytes;
+    } s;
 
-	/* Do we have an alpha channel? */
-	guint has_alpha : 1;
+    /* Do we have an alpha channel? */
+    guint has_alpha : 1;
 };
 
 struct _GdkPixbufClass {
-        GObjectClass parent_class;
-
+    GObjectClass parent_class;
 };
 
 #ifdef GDK_PIXBUF_ENABLE_BACKEND
 
-GdkPixbufModule *_gdk_pixbuf_get_module (guchar *buffer, guint size,
-                                         const gchar *filename,
-                                         GError **error);
-GdkPixbufModule *_gdk_pixbuf_get_named_module (const char *name,
-                                               GError **error);
-gboolean _gdk_pixbuf_load_module (GdkPixbufModule *image_module,
-                                  GError **error);
+GdkPixbufModule* _gdk_pixbuf_get_module(guchar* buffer, guint size, const gchar* filename, GError** error);
+GdkPixbufModule* _gdk_pixbuf_get_named_module(const char* name, GError** error);
+gboolean _gdk_pixbuf_load_module(GdkPixbufModule* image_module, GError** error);
 
-GdkPixbuf *_gdk_pixbuf_generic_image_load (GdkPixbufModule *image_module,
-					   FILE *f,
-					   GError **error);
+GdkPixbuf* _gdk_pixbuf_generic_image_load(GdkPixbufModule* image_module, FILE* f, GError** error);
 
-GdkPixbufFormat *_gdk_pixbuf_get_format (GdkPixbufModule *image_module);
-
+GdkPixbufFormat* _gdk_pixbuf_get_format(GdkPixbufModule* image_module);
 
 #endif /* GDK_PIXBUF_ENABLE_BACKEND */
 
-GdkPixbuf * _gdk_pixbuf_new_from_resource_try_pixdata (const char *resource_path);
-GdkPixbufLoader *_gdk_pixbuf_loader_new_with_filename (const char *filename);
+GdkPixbuf* _gdk_pixbuf_new_from_resource_try_pixdata(const char* resource_path);
+GdkPixbufLoader* _gdk_pixbuf_loader_new_with_filename(const char* filename);
 
-void _gdk_pixbuf_init_gettext (void);
+void _gdk_pixbuf_init_gettext(void);
 
 #endif /* GDK_PIXBUF_PRIVATE_H */
 
 #ifdef GDK_PIXBUF_RELOCATABLE
 
-gchar * gdk_pixbuf_get_toplevel (void);
+gchar* gdk_pixbuf_get_toplevel(void);
 
 #endif /* G_OS_WIN32 */

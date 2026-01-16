@@ -18,32 +18,27 @@
  */
 
 #include <math.h>
- 
+
 /* Workaround for round() for non-GCC/non-C99 compilers */
 #ifndef HAVE_ROUND
-static inline double
-round (double x)
-{
-  if (x >= 0)
-    return floor (x + 0.5);
-  else
-    return ceil (x - 0.5);
+static inline double round(double x) {
+    if (x >= 0)
+        return floor(x + 0.5);
+    else
+        return ceil(x - 0.5);
 }
 #endif
 
 /* Workaround for lrint() for non-GCC/non-C99 compilers */
 #ifndef HAVE_LRINT
-static inline long
-lrint (double x)
-{
-  if (ceil (x + 0.5) == floor (x + 0.5))
-    {
-      if (x < 1 && x > -1)
-        return 0;
+static inline long lrint(double x) {
+    if (ceil(x + 0.5) == floor(x + 0.5)) {
+        if (x < 1 && x > -1)
+            return 0;
 
-      return (int) ceil (x) % 2 == 0 ? ceil (x) : floor (x);
+        return (int)ceil(x) % 2 == 0 ? ceil(x) : floor(x);
     }
-  else
-    return x >= 0 ? floor (x + 0.5) : ceil (x - 0.5);
+    else
+        return x >= 0 ? floor(x + 0.5) : ceil(x - 0.5);
 }
 #endif
