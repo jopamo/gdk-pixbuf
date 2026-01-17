@@ -49,7 +49,9 @@ static void test_pixdata_deserialize(gconstpointer data) {
     g_assert_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE);
     g_clear_error(&error);
 
-    g_clear_object(&pixbuf);
+    if (pixbuf != NULL)
+        g_object_unref(pixbuf);
+    pixbuf = NULL;
 }
 
 static void test_pixdata_success(void) {
@@ -109,7 +111,9 @@ static void test_pixdata(void) {
     ref = gdk_pixbuf_new_from_file(path, &error);
     g_assert_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_UNKNOWN_TYPE);
     g_clear_error(&error);
-    g_clear_object(&ref);
+    if (ref != NULL)
+        g_object_unref(ref);
+    ref = NULL;
 }
 
 int main(int argc, char** argv) {

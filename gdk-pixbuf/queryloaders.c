@@ -199,8 +199,6 @@ static void query_module(GString* contents, const char* dir, const char* file) {
     GModule* module;
     void (*fill_info)(GdkPixbufFormat* info);
     void (*fill_vtable)(GdkPixbufModule* module);
-    gpointer fill_info_ptr;
-    gpointer fill_vtable_ptr;
 
     if (g_path_is_absolute(file))
         path = g_strdup(file);
@@ -208,8 +206,8 @@ static void query_module(GString* contents, const char* dir, const char* file) {
         path = g_build_filename(dir, file, NULL);
 
     module = g_module_open(path, 0);
-    if (module && g_module_symbol(module, "fill_info", &fill_info_ptr) &&
-        g_module_symbol(module, "fill_vtable", &fill_vtable_ptr)) {
+    if (module && g_module_symbol(module, "fill_info", (gpointer*)&fill_info) &&
+        g_module_symbol(module, "fill_vtable", (gpointer*)&fill_vtable)) {
         GdkPixbufFormat* info;
         GdkPixbufModule* vtable;
 
@@ -230,9 +228,6 @@ static void query_module(GString* contents, const char* dir, const char* file) {
         vtable = g_new0(GdkPixbufModule, 1);
 
         vtable->module = module;
-
-        fill_info = fill_info_ptr;
-        fill_vtable = fill_vtable_ptr;
 
         (*fill_info)(info);
         (*fill_vtable)(vtable);

@@ -143,6 +143,8 @@ static gboolean setup_png_transformations(png_structp png_read_ptr,
     return TRUE;
 }
 
+static void png_simple_error_callback(png_structp png_save_ptr, png_const_charp error_msg) G_GNUC_NORETURN;
+
 static void png_simple_error_callback(png_structp png_save_ptr, png_const_charp error_msg) {
     GError** error;
 
@@ -170,7 +172,7 @@ static void png_simple_warning_callback(png_structp png_save_ptr, png_const_char
 
 static gboolean png_text_to_pixbuf_option(png_text text_ptr, gchar** key, gchar** value) {
     gboolean is_ascii = TRUE;
-    int i;
+    png_size_t i;
 
     /* Avoid loading iconv if the text is plain ASCII */
     for (i = 0; i < text_ptr.text_length; i++)
@@ -213,7 +215,8 @@ static GdkPixbuf* gdk_pixbuf__png_image_load(FILE* f, GError** error) {
     png_structp png_ptr;
     png_infop info_ptr;
     png_textp text_ptr;
-    gint i, ctype;
+    gint ctype;
+    png_uint_32 i;
     png_uint_32 w, h;
     png_bytepp volatile rows = NULL;
     gint num_texts;
@@ -303,8 +306,8 @@ static GdkPixbuf* gdk_pixbuf__png_image_load(FILE* f, GError** error) {
     png_read_end(png_ptr, info_ptr);
 
     if (png_get_text(png_ptr, info_ptr, &text_ptr, &num_texts)) {
-        for (i = 0; i < num_texts; i++) {
-            png_text_to_pixbuf_option(text_ptr[i], &key, &value);
+        for (int j = 0; j < num_texts; j++) {
+            png_text_to_pixbuf_option(text_ptr[j], &key, &value);
             gdk_pixbuf_set_option(pixbuf, key, value);
             g_free(key);
             g_free(value);
@@ -703,7 +706,7 @@ static void png_row_callback(png_structp png_read_ptr, png_bytep new_row, png_ui
     if (lc->fatal_error_occurred)
         return;
 
-    if (row_num >= gdk_pixbuf_get_height(lc->pixbuf)) {
+    if (row_num >= (png_uint_32)gdk_pixbuf_get_height(lc->pixbuf)) {
         lc->fatal_error_occurred = TRUE;
         g_set_error_literal(lc->error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE,
                             _("Fatal error reading PNG image file"));
@@ -734,6 +737,8 @@ static void png_end_callback(png_structp png_read_ptr, png_infop png_info_ptr) {
     if (lc->fatal_error_occurred)
         return;
 }
+
+static void png_error_callback(png_structp png_read_ptr, png_const_charp error_msg) G_GNUC_NORETURN;
 
 static void png_error_callback(png_structp png_read_ptr, png_const_charp error_msg) {
     LoadContext* lc;
@@ -810,9 +815,9 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
     guchar* icc_profile = NULL;
     gsize icc_profile_size = 0;
     SaveToFunctionIoPtr to_callback_ioptr;
-    int num_keys = 0;
-    png_textp text_ptr = NULL;
-    GArray* text_data = NULL;
+    volatile int num_keys = 0;
+    volatile png_textp text_ptr = NULL;
+    volatile GArray* text_data = NULL;
 
     text_data = g_array_sized_new(FALSE, TRUE, sizeof(png_text), n_keys);
 
@@ -851,7 +856,7 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
             }
 
             text.compression = PNG_TEXT_COMPRESSION_NONE;
-            text.key = unprefixed_key;
+            text.key = g_strdup(unprefixed_key);
             text.text = g_convert(value, -1, "ISO-8859-1", "UTF-8", NULL, &text.text_length, NULL);
 
 #ifdef PNG_iTXt_SUPPORTED
@@ -873,7 +878,7 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
                 goto cleanup;
             }
 
-            g_array_append_val(text_data, text);
+            g_array_append_val((GArray*)text_data, text);
         }
         else if (strcmp(key, "icc-profile") == 0) {
             icc_profile = g_base64_decode(value, &icc_profile_size);
@@ -929,15 +934,22 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
     has_alpha = gdk_pixbuf_get_has_alpha(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
 
-    if (text_data->len > 0) {
-        num_keys = text_data->len;
-        text_ptr = (png_textp)g_array_free(text_data, FALSE);
+    if (((GArray*)text_data)->len > 0) {
+        png_textp new_text_ptr;
+
+        num_keys = ((GArray*)text_data)->len;
+        new_text_ptr = g_new(png_text, num_keys);
+        memcpy(new_text_ptr, ((GArray*)text_data)->data, num_keys * sizeof(png_text));
+        text_ptr = new_text_ptr;
+        g_array_unref((GArray*)text_data);
         text_data = NULL;
     }
     else {
-        g_clear_pointer(&text_data, g_array_unref);
+        if (text_data != NULL)
+            g_array_unref((GArray*)text_data);
         num_keys = 0;
         text_ptr = NULL;
+        text_data = NULL;
     }
 
     /* Guaranteed by the caller. */
@@ -964,7 +976,7 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
     }
 
     if (num_keys > 0) {
-        png_set_text(png_ptr, info_ptr, text_ptr, num_keys);
+        png_set_text(png_ptr, info_ptr, (png_textp)text_ptr, num_keys);
     }
 
     if (to_callback) {
@@ -1020,25 +1032,33 @@ static gboolean real_save_png(GdkPixbuf* pixbuf,
 
     png_write_end(png_ptr, info_ptr);
 
-    for (int i = 0; i < num_keys; i++) {
-        g_free(text_ptr[i].text);
-    }
-
-    g_free(text_ptr);
-
 cleanup:
     if (png_ptr != NULL) {
         png_destroy_write_struct(&png_ptr, &info_ptr);
     }
 
-    if (text_data != NULL) {
-        for (guint i = 0; i < text_data->len; i++) {
-            png_textp text = &g_array_index(text_data, png_text, i);
+    if (text_ptr != NULL) {
+        for (int i = 0; i < num_keys; i++) {
+            png_textp text = &((png_textp)text_ptr)[i];
 
             g_free(text->text);
+            g_free(text->key);
         }
 
-        g_array_unref(text_data);
+        g_free((png_textp)text_ptr);
+        text_ptr = NULL;
+    }
+
+    if (text_data != NULL) {
+        for (guint i = 0; i < ((GArray*)text_data)->len; i++) {
+            png_textp text = &g_array_index(((GArray*)text_data), png_text, i);
+
+            g_free(text->text);
+            g_free(text->key);
+        }
+
+        g_array_unref((GArray*)text_data);
+        text_data = NULL;
     }
 
     g_free(icc_profile);

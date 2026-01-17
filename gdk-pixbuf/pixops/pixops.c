@@ -318,8 +318,7 @@ static void pixops_scale_nearest(guchar* dest_buf,
                 INNER_LOOP(4, 3, dest[0] = p[0]; dest[1] = p[1]; dest[2] = p[2]);
             }
             else {
-                guint32* p32;
-                INNER_LOOP(4, 4, p32 = (guint32*)dest; *p32 = *((guint32*)p));
+                INNER_LOOP(4, 4, memcpy(dest, p, 4));
             }
         }
     }
@@ -758,7 +757,11 @@ static guchar* composite_line_22_4a4(int* weights,
         q0 = src0 + x_scaled * 4;
         q1 = src1 + x_scaled * 4;
 
-        pixel_weights = (int*)((char*)weights + ((x >> (SCALE_SHIFT - SUBSAMPLE_BITS - 4)) & (SUBSAMPLE_MASK << 4)));
+        {
+            int offset = ((x >> (SCALE_SHIFT - SUBSAMPLE_BITS - 4)) & (SUBSAMPLE_MASK << 4));
+
+            pixel_weights = weights + (offset / (int)sizeof(int));
+        }
 
         w1 = pixel_weights[0];
         w2 = pixel_weights[1];

@@ -117,10 +117,16 @@ static guint pixdata_get_length(const GdkPixdata* pixdata) {
  *
  * Deprecated: 2.32: Use #GResource instead.
  **/
+static inline void put_uint32(guint8** stream, guint32 value) {
+    guint32 be = g_htonl(value);
+
+    memcpy(*stream, &be, sizeof(be));
+    *stream += sizeof(be);
+}
+
 guint8* /* free result */
 gdk_pixdata_serialize(const GdkPixdata* pixdata, guint* stream_length_p) {
     guint8 *stream, *s;
-    guint32* istream;
     guint length;
 
     /* check args passing */
@@ -146,18 +152,17 @@ gdk_pixdata_serialize(const GdkPixdata* pixdata, guint* stream_length_p) {
     g_return_val_if_fail(length != 0, NULL);
 
     stream = g_malloc(GDK_PIXDATA_HEADER_LENGTH + length);
-    istream = (guint32*)stream;
+    s = stream;
 
     /* store header */
-    *istream++ = g_htonl(GDK_PIXBUF_MAGIC_NUMBER);
-    *istream++ = g_htonl(GDK_PIXDATA_HEADER_LENGTH + length);
-    *istream++ = g_htonl(pixdata->pixdata_type);
-    *istream++ = g_htonl(pixdata->rowstride);
-    *istream++ = g_htonl(pixdata->width);
-    *istream++ = g_htonl(pixdata->height);
+    put_uint32(&s, GDK_PIXBUF_MAGIC_NUMBER);
+    put_uint32(&s, GDK_PIXDATA_HEADER_LENGTH + length);
+    put_uint32(&s, pixdata->pixdata_type);
+    put_uint32(&s, pixdata->rowstride);
+    put_uint32(&s, pixdata->width);
+    put_uint32(&s, pixdata->height);
 
     /* copy pixel data */
-    s = (guint8*)istream;
     memcpy(s, pixdata->pixel_data, length);
     s += length;
 
@@ -186,6 +191,11 @@ gdk_pixdata_serialize(const GdkPixdata* pixdata, guint* stream_length_p) {
 static inline const guint8* get_uint32(const guint8* stream, guint* result) {
     *result = (stream[0] << 24) + (stream[1] << 16) + (stream[2] << 8) + stream[3];
     return stream + 4;
+}
+
+static void gdk_pixdata_destroy_pixels(guchar* pixels, gpointer data) {
+    (void)data;
+    g_free(pixels);
 }
 
 /**
@@ -241,7 +251,7 @@ gboolean gdk_pixdata_deserialize(GdkPixdata* pixdata, guint stream_length, const
         return_invalid_format(error);
 
     /* deserialize pixel data */
-    if (stream_length < pixdata->length - GDK_PIXDATA_HEADER_LENGTH)
+    if (stream_length < (guint)(pixdata->length - GDK_PIXDATA_HEADER_LENGTH))
         return_pixel_corrupt(error);
     pixdata->pixel_data = (guint8*)stream;
 
@@ -450,10 +460,13 @@ GdkPixbuf* gdk_pixbuf_from_pixdata(const GdkPixdata* pixdata, gboolean copy_pixe
         return NULL;
     }
 
-    if (encoding == GDK_PIXDATA_ENCODING_RAW && pixdata->length >= 1 &&
-        pixdata->length < pixdata->height * pixdata->rowstride - GDK_PIXDATA_HEADER_LENGTH) {
-        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("Image pixel data corrupt"));
-        return NULL;
+    if (encoding == GDK_PIXDATA_ENCODING_RAW && pixdata->length >= 1) {
+        gsize min_length = (gsize)pixdata->height * (gsize)pixdata->rowstride - (gsize)GDK_PIXDATA_HEADER_LENGTH;
+
+        if ((gsize)pixdata->length < min_length) {
+            g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_CORRUPT_IMAGE, _("Image pixel data corrupt"));
+            return NULL;
+        }
     }
 
     if (copy_pixels) {
@@ -539,8 +552,7 @@ GdkPixbuf* gdk_pixbuf_from_pixdata(const GdkPixdata* pixdata, gboolean copy_pixe
 
     return gdk_pixbuf_new_from_data(
         data, GDK_COLORSPACE_RGB, (pixdata->pixdata_type & GDK_PIXDATA_COLOR_TYPE_MASK) == GDK_PIXDATA_COLOR_TYPE_RGBA,
-        8, pixdata->width, pixdata->height, pixdata->rowstride, copy_pixels ? (GdkPixbufDestroyNotify)g_free : NULL,
-        data);
+        8, pixdata->width, pixdata->height, pixdata->rowstride, copy_pixels ? gdk_pixdata_destroy_pixels : NULL, data);
 }
 
 typedef struct {

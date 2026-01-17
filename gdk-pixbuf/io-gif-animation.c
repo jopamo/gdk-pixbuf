@@ -38,7 +38,7 @@ static GdkPixbufAnimationIter* gdk_pixbuf_gif_anim_get_iter(GdkPixbufAnimation* 
 G_GNUC_END_IGNORE_DEPRECATIONS
 static GdkPixbuf* gdk_pixbuf_gif_anim_iter_get_pixbuf(GdkPixbufAnimationIter* iter);
 
-G_DEFINE_TYPE(GdkPixbufGifAnim, gdk_pixbuf_gif_anim, GDK_TYPE_PIXBUF_ANIMATION);
+G_DEFINE_TYPE(GdkPixbufGifAnim, gdk_pixbuf_gif_anim, GDK_TYPE_PIXBUF_ANIMATION)
 
 static void gdk_pixbuf_gif_anim_init(GdkPixbufGifAnim* anim) {}
 
@@ -70,8 +70,12 @@ static void gdk_pixbuf_gif_anim_finalize(GObject* object) {
 
     g_list_free(gif_anim->frames);
 
-    g_clear_object(&gif_anim->last_frame_data);
-    g_clear_object(&gif_anim->last_frame_revert_data);
+    if (gif_anim->last_frame_data != NULL)
+        g_object_unref(gif_anim->last_frame_data);
+    gif_anim->last_frame_data = NULL;
+    if (gif_anim->last_frame_revert_data != NULL)
+        g_object_unref(gif_anim->last_frame_revert_data);
+    gif_anim->last_frame_revert_data = NULL;
 
     G_OBJECT_CLASS(gdk_pixbuf_gif_anim_parent_class)->finalize(object);
 }
@@ -154,7 +158,7 @@ G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 static gboolean gdk_pixbuf_gif_anim_iter_advance(GdkPixbufAnimationIter* iter, const GTimeVal* current_time);
 G_GNUC_END_IGNORE_DEPRECATIONS
 
-G_DEFINE_TYPE(GdkPixbufGifAnimIter, gdk_pixbuf_gif_anim_iter, GDK_TYPE_PIXBUF_ANIMATION_ITER);
+G_DEFINE_TYPE(GdkPixbufGifAnimIter, gdk_pixbuf_gif_anim_iter, GDK_TYPE_PIXBUF_ANIMATION_ITER)
 
 static void gdk_pixbuf_gif_anim_iter_init(GdkPixbufGifAnimIter* iter) {}
 
@@ -280,7 +284,9 @@ static void composite_frame(GdkPixbufGifAnim* anim, GdkPixbufFrame* frame) {
     anim->last_frame = frame;
 
     /* Store overwritten data if required */
-    g_clear_object(&anim->last_frame_revert_data);
+    if (anim->last_frame_revert_data != NULL)
+        g_object_unref(anim->last_frame_revert_data);
+    anim->last_frame_revert_data = NULL;
     if (frame->action == GDK_PIXBUF_FRAME_REVERT) {
         anim->last_frame_revert_data = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, frame->width, frame->height);
         if (anim->last_frame_revert_data != NULL)
@@ -326,7 +332,7 @@ static void composite_frame(GdkPixbufGifAnim* anim, GdkPixbufFrame* frame) {
 
         x = i % frame->width + frame->x_offset;
         y = interlace_rows[i / frame->width] + frame->y_offset;
-        if (x >= anim->width || y >= anim->height)
+        if (x >= (guint)anim->width || y >= (guint)anim->height)
             continue;
 
         if (g_size_checked_mul(&offset, gdk_pixbuf_get_rowstride(anim->last_frame_data), y) &&
@@ -339,7 +345,8 @@ static void composite_frame(GdkPixbufGifAnim* anim, GdkPixbufFrame* frame) {
     }
 
 out:
-    g_clear_object(&lzw_decoder);
+    if (lzw_decoder != NULL)
+        g_object_unref(lzw_decoder);
     g_free(index_buffer);
     g_free(interlace_rows);
 }

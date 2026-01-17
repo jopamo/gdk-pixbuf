@@ -253,11 +253,24 @@ static GdkPixbuf* tiff_image_parse(TIFF* tiff, TiffContext* context, GError** er
     if (context)
         (*context->prepared_func)(pixbuf, NULL, context->user_data);
 
-    if (!TIFFReadRGBAImageOriented(tiff, width, height, (uint32_t*)pixels, ORIENTATION_TOPLEFT, 1)) {
-        g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
-                            _("Failed to load RGB data from TIFF file"));
-        g_object_unref(pixbuf);
-        return NULL;
+    {
+        uint32_t* pixels32;
+        gsize row_bytes = (gsize)width * 4;
+
+        pixels32 = g_new(uint32_t, (gsize)width*(gsize)height);
+        if (!TIFFReadRGBAImageOriented(tiff, width, height, pixels32, ORIENTATION_TOPLEFT, 1)) {
+            g_free(pixels32);
+            g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
+                                _("Failed to load RGB data from TIFF file"));
+            g_object_unref(pixbuf);
+            return NULL;
+        }
+
+        for (gint y = 0; y < height; y++) {
+            memcpy(pixels + y * rowstride, pixels32 + (gsize)y * (gsize)width, row_bytes);
+        }
+
+        g_free(pixels32);
     }
 
     /* Flag multi-page documents, because this loader only handles the
@@ -451,7 +464,8 @@ static gboolean gdk_pixbuf__tiff_image_stop_load(gpointer data, GError** error) 
 
         pixbuf = tiff_image_parse(tiff, context, error);
         retval = (pixbuf != NULL);
-        g_clear_object(&pixbuf);
+        if (pixbuf != NULL)
+            g_object_unref(pixbuf);
         /* tiff_image_parse() can return NULL on success in a particular case */
         if (!retval && error && !*error) {
             g_set_error_literal(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED, _("Failed to load TIFF image"));
@@ -774,7 +788,7 @@ static gboolean gdk_pixbuf__tiff_image_save_to_callback(GdkPixbufSaveFunc save_f
         copy_gray_row(dith_row_1, pixels, width, has_alpha);
 
         for (y = 0; y < height; y++) {
-            guint x;
+            gint x;
             gint* p;
 
             memset(mono_row, 0, (width + 7) / 8);

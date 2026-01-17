@@ -172,7 +172,7 @@ static void gif_set_get_colormap2(GifContext* context) {
 static gint gif_get_colormap(GifContext* context) {
     unsigned char rgb[3];
 
-    while (context->global_colormap_size < context->global_bit_pixel) {
+    while ((unsigned int)context->global_colormap_size < context->global_bit_pixel) {
         if (!gif_read(context, rgb, sizeof(rgb))) {
             return -1;
         }
@@ -190,7 +190,7 @@ static gint gif_get_colormap(GifContext* context) {
 static gint gif_get_colormap2(GifContext* context) {
     unsigned char rgb[3];
 
-    while (context->frame_colormap_size < context->frame_bit_pixel) {
+    while ((unsigned int)context->frame_colormap_size < context->frame_bit_pixel) {
         if (!gif_read(context, rgb, sizeof(rgb))) {
             return -1;
         }

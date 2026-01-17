@@ -101,6 +101,8 @@ static gboolean gdk_pixbuf__jpeg_image_stop_load(gpointer context, GError** erro
 static gboolean gdk_pixbuf__jpeg_image_load_increment(gpointer context, const guchar* buf, guint size, GError** error);
 static gboolean gdk_pixbuf__jpeg_image_load_lines(JpegProgContext* context, GError** error);
 
+static void fatal_error_handler(j_common_ptr cinfo) G_GNUC_NORETURN;
+
 static void fatal_error_handler(j_common_ptr cinfo) {
     struct error_handler_data* errmgr;
     char buffer[JMSG_LENGTH_MAX];
@@ -160,7 +162,8 @@ static void explode_gray_into_buf(struct jpeg_decompress_struct* cinfo, guchar**
 }
 
 static void convert_cmyk_to_rgb(struct jpeg_decompress_struct* cinfo, guchar** lines) {
-    gint i, j;
+    gint i;
+    JDIMENSION j;
 
     g_return_if_fail(cinfo != NULL);
     g_return_if_fail(cinfo->output_components == 4);
@@ -662,7 +665,9 @@ static GdkPixbuf* gdk_pixbuf__real_jpeg_image_load(FILE* f, struct jpeg_decompre
                 convert_cmyk_to_rgb(cinfo, lines);
                 break;
             default:
-                g_clear_object(&pixbuf);
+                if (pixbuf != NULL)
+                    g_object_unref(pixbuf);
+                pixbuf = NULL;
                 g_set_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_UNKNOWN_TYPE,
                             _("Unsupported JPEG color space (%s)"), colorspace_name(cinfo->out_color_space));
                 goto out;
@@ -705,16 +710,16 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo) {
 
 static void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
     my_src_ptr src = (my_src_ptr)cinfo->src;
-    long num_can_do;
+    size_t num_can_do;
 
     /* move as far as we can into current buffer */
     /* then set skip_next to catch the rest      */
     if (num_bytes > 0) {
-        num_can_do = MIN(src->pub.bytes_in_buffer, num_bytes);
-        src->pub.next_input_byte += (size_t)num_can_do;
-        src->pub.bytes_in_buffer -= (size_t)num_can_do;
+        num_can_do = MIN(src->pub.bytes_in_buffer, (size_t)num_bytes);
+        src->pub.next_input_byte += num_can_do;
+        src->pub.bytes_in_buffer -= num_can_do;
 
-        src->skip_next = num_bytes - num_can_do;
+        src->skip_next = num_bytes - (long)num_can_do;
     }
 }
 
@@ -807,7 +812,7 @@ static gboolean gdk_pixbuf__jpeg_image_stop_load(gpointer data, GError** error) 
             my_src_ptr src = (my_src_ptr)cinfo->src;
 
             /* But only if there's enough buffer space left */
-            if (src->skip_next < sizeof(src->buffer) - 2) {
+            if ((size_t)src->skip_next < sizeof(src->buffer) - 2) {
                 /* Insert a fake EOI marker */
                 src->buffer[src->skip_next] = (JOCTET)0xFF;
                 src->buffer[src->skip_next + 1] = (JOCTET)JPEG_EOI;
@@ -1032,7 +1037,7 @@ static gboolean gdk_pixbuf__jpeg_image_load_increment(gpointer data, const gucha
             cinfo->scale_num = 1;
             for (cinfo->scale_denom = 2; cinfo->scale_denom <= 8; cinfo->scale_denom *= 2) {
                 jpeg_calc_output_dimensions(cinfo);
-                if (cinfo->output_width < width || cinfo->output_height < height) {
+                if (cinfo->output_width < (JDIMENSION)width || cinfo->output_height < (JDIMENSION)height) {
                     cinfo->scale_denom /= 2;
                     break;
                 }
@@ -1252,7 +1257,6 @@ static gboolean real_save_jpeg(GdkPixbuf* pixbuf,
     guchar* ptr;
     guchar* pixels = NULL;
     JSAMPROW* jbuf;
-    int y = 0;
     volatile int quality = 75; /* default; must be between 0 and 100 */
     int i, j;
     int w, h = 0;
@@ -1454,12 +1458,12 @@ static gboolean real_save_jpeg(GdkPixbuf* pixbuf,
             data = g_new(gchar, 0xffff);
             memcpy(data, "ICC_PROFILE\000", 12);
             data[13] = segments;
-            for (i = 0; i <= segments; i++) {
-                data[12] = i;
-                offset = 0xffef * i;
+            for (guint segment_index = 0; segment_index <= segments; segment_index++) {
+                data[12] = segment_index;
+                offset = 0xffef * segment_index;
 
                 /* last segment */
-                if (i == segments)
+                if (segment_index == segments)
                     size = icc_profile_size % 0xffef;
 
                 memcpy(data + 14, icc_profile + offset, size);
@@ -1487,7 +1491,6 @@ static gboolean real_save_jpeg(GdkPixbuf* pixbuf,
         }
 
         i++;
-        y++;
     }
 
     /* finish off */

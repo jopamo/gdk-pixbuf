@@ -170,10 +170,12 @@ test_env.set('GDK_PIXBUF_MODULE_FILE', loaders_cache.full_path())
 
 foreach test_name, test_data: installed_tests
   test_sources = [ test_name + '.c', 'test-common.c' ]
+  test_c_args = common_cflags
   test_suites = test_data.get('suites', [])
   needs_resources = test_data.get('needs_resources', false)
   if needs_resources
     test_sources += [ resources_c, resources_h ]
+    test_c_args += [ '-Wno-overlength-strings' ]
   endif
   skip_if_true = test_data.get('skip', false)
   if skip_if_true
@@ -195,7 +197,7 @@ foreach test_name, test_data: installed_tests
   test_bin = executable(test_name, test_sources,
     dependencies: test_deps,
     include_directories: [ root_inc, gdk_pixbuf_inc, ],
-    c_args: common_cflags,
+    c_args: test_c_args,
     install: get_option('installed_tests'),
     install_dir: installed_test_bindir,
   )
